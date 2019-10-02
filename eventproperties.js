@@ -1,0 +1,2 @@
+/* exported eventProperties */
+const eventProperties = {};
