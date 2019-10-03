@@ -1,6 +1,6 @@
-/* exported modelProperties */
-const modelProperties = {
-  hasModelProperties: {
+/* exported modelPropertyDescriptors */
+const modelPropertyDescriptors = {
+  hasModelPropertyDescriptors: {
     value: true
   },
 
@@ -38,7 +38,7 @@ const modelProperties = {
               this.__propertyData[name] = value;
             });
 
-            if (this.hasEventfulProperties) {
+            if (this.hasEventfulPropertyDescriptors) {
               this.trigger('change', name, value, oldValue);
               this.trigger(`change:${name}`, value, oldValue);
             }

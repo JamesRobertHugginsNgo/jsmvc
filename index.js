@@ -1,25 +1,35 @@
-/* global eventfulProperties modelProperties */
+/* global mf cf vf */
 
-console.log(modelProperties);
-
-const obj = {};
-Object.defineProperties(obj, eventfulProperties);
-Object.defineProperties(obj, modelProperties);
-
-obj.property('prop1');
+const obj = mf({ data1: 123, data2: 'abc' });
 
 obj.on('change', () => {
-  console.log('CHANGE');
+  console.log('MODEL CHANGE');
 });
 
-obj.prop1 = '000';
+obj.data1 = null;
 
-// obj.push('123');
-// obj.push('456');
-// obj.push('789', '789', '789', '789');
+console.log(obj.toJSON(), obj);
 
-// console.log('POP', obj.pop());
+const arr = cf([ 123, 'abc']);
 
-// obj[0] = 'abc';
+arr.on('change', () => {
+  console.log('COLLECTION CHANGE');
+});
 
-console.log('OBJECT', obj, obj.hasModelProperties);
+arr.push(true, 'abc');
+arr[1] = 'TEXT';
+
+console.log(arr.toArray(), arr);
+
+const link = vf(document.getElementById('link'), { 'data-id': 'new_id' }, [
+  ' ',
+  vf.span({}, [
+    'SPAN'
+  ], []),
+], []);
+
+link.promise.then(() => {
+  console.log('LINK DONE');
+})
+
+console.log(link);

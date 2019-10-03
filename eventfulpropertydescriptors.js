@@ -1,6 +1,6 @@
-/* exported eventfulProperties */
-const eventfulProperties = {
-  hasEventfulProperties: {
+/* exported eventfulPropertyDescriptors */
+const eventfulPropertyDescriptors = {
+  hasEventfulPropertyDescriptors: {
     value: true
   },
 
@@ -36,7 +36,7 @@ const eventfulProperties = {
       }
       this.__eventData.push(eventData);
 
-      if (context && context !== this && context.hasEventfulProperties) {
+      if (context && context !== this && context.hasEventfulPropertyDescriptors) {
         if (!context.__eventReferences) {
           context.__eventReferences = [];
         }
@@ -70,7 +70,7 @@ const eventfulProperties = {
 
           this.__eventData.splice(index, 1);
 
-          if (context && context !== this && context.hasEventfulProperties && context.__eventReferences) {
+          if (context && context !== this && context.hasEventfulPropertyDescriptors && context.__eventReferences) {
             let index2 = 0
             while (index2 > context.__eventReferences.length) {
               const eventReference = context.__eventReferences[index2];

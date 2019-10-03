@@ -1,6 +1,6 @@
-/* exported collectionProperties */
-const collectionProperties = {
-  hasCollectionProperties: {
+/* exported collectionPropertyDescriptors */
+const collectionPropertyDescriptors = {
+  hasCollectionPropertyDescriptors: {
     value: true
   },
 
@@ -32,7 +32,7 @@ const collectionProperties = {
                   const oldValue = this.__collectionData[key];
                   this.__collectionData[key] = value;
 
-                  if (this.hasEventfulProperties) {
+                  if (this.hasEventfulPropertyDescriptors) {
                     this.trigger('change', key, value, oldValue);
                     this.trigger(`change:${key}`, value, oldValue);
                   }
@@ -47,7 +47,7 @@ const collectionProperties = {
           }
         }
 
-        if (this.hasEventfulProperties) {
+        if (this.hasEventfulPropertyDescriptors) {
           this.trigger('change');
         }
       }
@@ -63,7 +63,7 @@ const collectionProperties = {
 
 Object.getOwnPropertyNames(Array.prototype).forEach((method) => {
   if (typeof Array.prototype[method] === 'function') {
-    collectionProperties[method] = {
+    collectionPropertyDescriptors[method] = {
       value(...args) {
         if (!this.__collectionData) {
           this.__collectionData = [];
