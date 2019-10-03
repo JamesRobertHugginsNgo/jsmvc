@@ -22,14 +22,13 @@ const eventfulProperties = {
       };
 
       if (this.addEventListener) {
-        const listener = once
+        eventData.listener = once
           ? (...args) => {
             handler(...args);
             this.off(name, handler, once, context, { calledFromListener: true });
           }
           : handler;
-        eventData.listener = listener;
-        this.addEventListener(name, listener, { once });
+        this.addEventListener(name, eventData.listener, { once });
       }
 
       if (!this.__eventData) {
