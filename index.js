@@ -1,9 +1,9 @@
-/* global eventProperties modelProperties */
+/* global eventfulProperties modelProperties */
 
 console.log(modelProperties);
 
 const obj = {};
-Object.defineProperties(obj, eventProperties);
+Object.defineProperties(obj, eventfulProperties);
 Object.defineProperties(obj, modelProperties);
 
 obj.property('prop1');

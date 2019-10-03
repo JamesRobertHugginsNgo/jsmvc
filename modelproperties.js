@@ -38,7 +38,7 @@ const modelProperties = {
               this.__propertyData[name] = value;
             });
 
-            if (this.hasEventProperties) {
+            if (this.hasEventfulProperties) {
               this.trigger('change', name, value, oldValue);
               this.trigger(`change:${name}`, value, oldValue);
             }

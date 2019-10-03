@@ -1,6 +1,6 @@
-/* exported eventProperties */
-const eventProperties = {
-  hasEventProperties: {
+/* exported eventfulProperties */
+const eventfulProperties = {
+  hasEventfulProperties: {
     value: true
   },
 
@@ -21,12 +21,23 @@ const eventProperties = {
         context
       };
 
+      if (this.addEventListener) {
+        const listener = once
+          ? (...args) => {
+            handler(...args);
+            this.off(name, handler, once, context, { calledFromListener: true });
+          }
+          : handler;
+        eventData.listener = listener;
+        this.addEventListener(name, listener, { once });
+      }
+
       if (!this.__eventData) {
         this.__eventData = [];
       }
       this.__eventData.push(eventData);
 
-      if (context && context !== this && context.hasEventProperties) {
+      if (context && context !== this && context.hasEventfulProperties) {
         if (!context.__eventReferences) {
           context.__eventReferences = [];
         }
@@ -41,7 +52,7 @@ const eventProperties = {
   },
 
   off: {
-    value(name, handler, once, context) {
+    value(name, handler, once, context, options = {}) {
       if (!this.__eventData) {
         return this;
       }
@@ -54,9 +65,13 @@ const eventProperties = {
           && (once == null || once === eventData.once)
           && (context == null || context === eventData.context)) {
 
+          if (this.removeEventListener && !options.calledFromListener) {
+            this.removeEventListener(eventData.name, eventData.listener);
+          }
+
           this.__eventData.splice(index, 1);
 
-          if (context && context !== this && context.hasEventProperties && context.__eventReferences) {
+          if (context && context !== this && context.hasEventfulProperties && context.__eventReferences) {
             let index2 = 0
             while (index2 > context.__eventReferences.length) {
               const eventReference = context.__eventReferences[index2];
@@ -67,6 +82,13 @@ const eventProperties = {
               }
             }
           }
+
+          // if (this.addEventListener) {
+          //   this.addEventListener(name, (...args) => {
+          //     this.trigger(name, ...args);
+          //   });
+          // }
+
         } else {
           index++;
         }

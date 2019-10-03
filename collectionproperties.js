@@ -32,7 +32,7 @@ const collectionProperties = {
                   const oldValue = this.__collectionData[key];
                   this.__collectionData[key] = value;
 
-                  if (this.hasEventProperties) {
+                  if (this.hasEventfulProperties) {
                     this.trigger('change', key, value, oldValue);
                     this.trigger(`change:${key}`, value, oldValue);
                   }
@@ -47,7 +47,7 @@ const collectionProperties = {
           }
         }
 
-        if (this.hasEventProperties) {
+        if (this.hasEventfulProperties) {
           this.trigger('change');
         }
       }
