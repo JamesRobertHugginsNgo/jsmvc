@@ -55,6 +55,12 @@ var viewPropertyDescriptors = {
           return value;
         }
 
+        if (value instanceof Promise) {
+          return value.then(function (finalValue) {
+            return renderAttributes(finalValue, key);
+          });
+        }
+
         if (Array.isArray(value)) {
           var promises = [];
           value.forEach(function (item, index) {
@@ -74,12 +80,6 @@ var viewPropertyDescriptors = {
           }
 
           return renderAttributes(value.join(' '), key);
-        }
-
-        if (value instanceof Promise) {
-          return value.then(function (finalValue) {
-            return renderAttributes(finalValue, key);
-          });
         }
 
         if (_typeof(value) === 'object') {
