@@ -52,6 +52,13 @@ const viewPropertyDescriptors = {
           return value;
         }
 
+        if (value instanceof Promise) {
+          return value
+            .then((finalValue) => {
+              return renderAttributes(finalValue, key);
+            });
+        }
+
         if (Array.isArray(value)) {
           const promises = [];
           value.forEach((item, index) => {
@@ -72,13 +79,6 @@ const viewPropertyDescriptors = {
               });
           }
           return renderAttributes(value.join(' '), key);
-        }
-
-        if (value instanceof Promise) {
-          return value
-            .then((finalValue) => {
-              return renderAttributes(finalValue, key);
-            });
         }
 
         if (typeof value === 'object') {
