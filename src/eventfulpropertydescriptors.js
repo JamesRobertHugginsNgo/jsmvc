@@ -1,6 +1,6 @@
 /* exported eventfulPropertyDescriptors */
 const eventfulPropertyDescriptors = {
-  hasEventfulPropertyDescriptors: {
+  definedByEventfulPropertyDescriptors: {
     value: true
   },
 
@@ -14,12 +14,7 @@ const eventfulPropertyDescriptors = {
 
   on: {
     value(name, handler, once = false, context = this) {
-      const eventData = {
-        name,
-        handler,
-        once,
-        context
-      };
+      const eventData = { name, handler, once, context };
 
       if (this.addEventListener) {
         eventData.listener = once
@@ -36,7 +31,7 @@ const eventfulPropertyDescriptors = {
       }
       this.__eventData.push(eventData);
 
-      if (context && context !== this && context.hasEventfulPropertyDescriptors) {
+      if (context && context !== this && context.definedByEventfulPropertyDescriptors) {
         if (!context.__eventReferences) {
           context.__eventReferences = [];
         }
@@ -70,7 +65,7 @@ const eventfulPropertyDescriptors = {
 
           this.__eventData.splice(index, 1);
 
-          if (context && context !== this && context.hasEventfulPropertyDescriptors && context.__eventReferences) {
+          if (context && context !== this && context.definedByEventfulPropertyDescriptors && context.__eventReferences) {
             let index2 = 0
             while (index2 > context.__eventReferences.length) {
               const eventReference = context.__eventReferences[index2];
@@ -81,12 +76,6 @@ const eventfulPropertyDescriptors = {
               }
             }
           }
-
-          // if (this.addEventListener) {
-          //   this.addEventListener(name, (...args) => {
-          //     this.trigger(name, ...args);
-          //   });
-          // }
 
         } else {
           index++;
@@ -99,6 +88,10 @@ const eventfulPropertyDescriptors = {
 
   trigger: {
     value(name, ...args) {
+      if (!this.__eventData) {
+        return this;
+      }
+      
       this.__eventData.forEach((eventData) => {
         if (name === eventData.name) {
           eventData.handler.call(eventData.context, ...args);

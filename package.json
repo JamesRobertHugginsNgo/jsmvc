@@ -1,15 +1,32 @@
 {
   "name": "jsmvc",
   "version": "1.0.0",
-  "description": "",
+  "description": "JavaScript Model View Controller",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "Build": "gulp"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "JavaScript",
+    "MVC",
+    "Model",
+    "View",
+    "Controller",
+    "Event",
+    "Eventful"
+  ],
+  "author": "James Robert Huggins Ngo",
   "license": "ISC",
   "devDependencies": {
-    "eslint": "^6.5.1"
+    "@babel/core": "^7.6.2",
+    "@babel/preset-env": "^7.6.2",
+    "del": "^5.1.0",
+    "eslint": "^6.5.1",
+    "gulp": "^4.0.2",
+    "gulp-babel": "^8.0.0",
+    "gulp-concat": "^2.6.1",
+    "gulp-eslint": "^6.0.0",
+    "gulp-rename": "^1.4.0",
+    "gulp-uglify": "^3.0.2"
   }
 }

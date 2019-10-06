@@ -1,6 +1,6 @@
 /* exported modelPropertyDescriptors */
 const modelPropertyDescriptors = {
-  hasModelPropertyDescriptors: {
+  definedByModelPropertyDescriptors: {
     value: true
   },
 
@@ -9,7 +9,7 @@ const modelPropertyDescriptors = {
   },
 
   property: {
-    value(name, value = this[name], getter = function (returnFunction) { return returnFunction; },
+    value(name, value = this[name], getter = function (returnFunction) { return returnFunction(); },
       setter = function (value, mainFunction) { mainFunction(); }) {
 
       if (!this.__propertyData) {
@@ -38,7 +38,7 @@ const modelPropertyDescriptors = {
               this.__propertyData[name] = value;
             });
 
-            if (this.hasEventfulPropertyDescriptors) {
+            if (this.definedByEventfulPropertyDescriptors) {
               this.trigger('change', name, value, oldValue);
               this.trigger(`change:${name}`, value, oldValue);
             }

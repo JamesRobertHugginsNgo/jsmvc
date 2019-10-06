@@ -1,6 +1,6 @@
 /* exported viewPropertyDescriptors */
 const viewPropertyDescriptors = {
-  hasViewPropertyDescriptors: {
+  definedByViewPropertyDescriptors: {
     value: true
   },
 
@@ -47,7 +47,7 @@ const viewPropertyDescriptors = {
       }
 
       const renderAttribute = (key, value) => {
-        if (typeof value === 'object') {
+        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
           return renderAttributes(value);
         } else if (typeof value === 'function') {
           return renderAttribute(key, value(this));
@@ -84,10 +84,10 @@ const viewPropertyDescriptors = {
 
         if (childElement instanceof HTMLElement || childElement instanceof Text) {
           placeHolder.parentNode.insertBefore(childElement, placeHolder)
-          if (childElement.hasViewPropertyDescriptors) {
+          if (childElement.definedByViewPropertyDescriptors) {
             returnValue = childElement.promise;
           }
-        } else {
+        } else if (typeof childElement === 'string') {
           const tempElement = document.createElement('div');
           tempElement.innerHTML = childElement;
           while (tempElement.firstChild) {
@@ -118,7 +118,7 @@ const viewPropertyDescriptors = {
           const promises = [];
           if (!calledFromFactory && this.__childElements && Array.isArray(this.__childElements)) {
             this.__childElements.forEach((childElement) => {
-              if (childElement.hasViewPropertyDescriptors) {
+              if (childElement.definedByViewPropertyDescriptors) {
                 promises.push(childElement.render().promise);
               }
             });
