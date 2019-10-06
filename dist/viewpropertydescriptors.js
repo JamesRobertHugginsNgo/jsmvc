@@ -50,32 +50,66 @@ var viewPropertyDescriptors = {
         this.removeChild(this.firstChild);
       }
 
-      var renderAttribute = function renderAttribute(key, value) {
-        if (_typeof(value) === 'object' && value !== null && !Array.isArray(value)) {
-          return renderAttributes(value);
-        } else if (typeof value === 'function') {
-          return renderAttribute(key, value(_this));
-        } else if (value instanceof Promise) {
-          return value.then(function (finalAttribute) {
-            return renderAttribute(finalAttribute);
+      var renderAttributes = function renderAttributes(value, key) {
+        if (value == null || value === false) {
+          return value;
+        }
+
+        if (Array.isArray(value)) {
+          var promises = [];
+          value.forEach(function (item, index) {
+            value[index] = renderAttributes(item);
+
+            if (value[index] instanceof Promise) {
+              promises.push(value[index].then(function (finalItem) {
+                value[index] = finalItem;
+              }));
+            }
           });
-        } else if (value != null) {
+
+          if (promises.length > 0) {
+            return Promise.all(promises).then(function () {
+              return renderAttributes(value.join(' '), key);
+            });
+          }
+
+          return renderAttributes(value.join(' '), key);
+        }
+
+        if (value instanceof Promise) {
+          console.log('PROMISE');
+          return value.then(function (finalValue) {
+            console.log('DONE', finalValue, key);
+            return renderAttributes(finalValue, key);
+          });
+        }
+
+        if (_typeof(value) === 'object') {
+          var _promises = [];
+
+          for (var _key in value) {
+            _promises.push(renderAttributes(value[_key], _key));
+          }
+
+          return Promise.all(_promises);
+        }
+
+        if (typeof value === 'function') {
+          return renderAttributes(value(), key);
+        }
+
+        if (typeof value === 'boolean') {
+          renderAttributes('', key);
+          return value;
+        }
+
+        if (key) {
+          console.log('SET ATTRIBUTE', key, value);
+
           _this.setAttribute(key, value);
         }
-      };
 
-      var renderAttributes = function renderAttributes(attributes) {
-        if (typeof attributes === 'function') {
-          return renderAttributes(attributes(_this));
-        } else if (attributes instanceof Promise) {
-          return attributes.then(function (finalAttributes) {
-            return renderAttributes(finalAttributes);
-          });
-        } else if (_typeof(attributes) === 'object' && attributes != null) {
-          return Promise.all(Object.keys(attributes).map(function (key) {
-            return renderAttribute(key, attributes[key]);
-          }));
-        }
+        return value;
       };
 
       var renderChildElement = function renderChildElement(childElement, placeHolder) {
