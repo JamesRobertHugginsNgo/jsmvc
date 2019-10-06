@@ -77,9 +77,7 @@ var viewPropertyDescriptors = {
         }
 
         if (value instanceof Promise) {
-          console.log('PROMISE');
           return value.then(function (finalValue) {
-            console.log('DONE', finalValue, key);
             return renderAttributes(finalValue, key);
           });
         }
@@ -104,8 +102,6 @@ var viewPropertyDescriptors = {
         }
 
         if (key) {
-          console.log('SET ATTRIBUTE', key, value);
-
           _this.setAttribute(key, value);
         }
 
