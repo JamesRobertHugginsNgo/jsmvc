@@ -12,11 +12,11 @@ var modelPropertyDescriptors = {
     value: function value(name) {
       var _value = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this[name];
 
-      var getter = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : function (returnFunction) {
-        return returnFunction();
+      var getter = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : function (getterFunction) {
+        return getterFunction();
       };
-      var setter = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : function (value, mainFunction) {
-        mainFunction();
+      var setter = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : function (value, setterFunction) {
+        setterFunction();
       };
 
       if (!this.__propertyData) {

@@ -37,6 +37,7 @@ const viewPropertyDescriptors = {
         for (let index = 0, length = this.attributes.length; index < length; index++) {
           attributeKeys.push(this.attributes[index].name);
         }
+
         attributeKeys.forEach((key) => {
           this.removeAttribute(key);
         });
@@ -46,26 +47,61 @@ const viewPropertyDescriptors = {
         this.removeChild(this.firstChild);
       }
 
-      const renderAttribute = (key, value) => {
-        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-          return renderAttributes(value);
-        } else if (typeof value === 'function') {
-          return renderAttribute(key, value(this));
-        } else if (value instanceof Promise) {
-          return value.then((finalAttribute) => { return renderAttribute(finalAttribute); });
-        } else if (value != null) {
+      const renderAttributes = (value, key) => {
+        if (value == null || value === false) {
+          return value;
+        }
+
+        if (value instanceof Promise) {
+          return value
+            .then((finalValue) => {
+              return renderAttributes(finalValue, key);
+            });
+        }
+
+        if (Array.isArray(value)) {
+          const promises = [];
+          value.forEach((item, index) => {
+            value[index] = renderAttributes(item);
+            if (value[index] instanceof Promise) {
+              promises.push(
+                value[index]
+                  .then((finalItem) => {
+                    value[index] = finalItem;
+                  })
+              );
+            }
+          });
+          if (promises.length > 0) {
+            return Promise.all(promises)
+              .then(() => {
+                return renderAttributes(value.join(' '), key);
+              });
+          }
+          return renderAttributes(value.join(' '), key);
+        }
+
+        if (typeof value === 'object') {
+          const promises = [];
+          for (const key in value) {
+            promises.push(renderAttributes(value[key], key));
+          }
+          return Promise.all(promises);
+        }
+
+        if (typeof value === 'function') {
+          return renderAttributes(value(), key);
+        }
+
+        if (typeof value === 'boolean') {
+          renderAttributes('', key);
+          return value;
+        }
+
+        if (key) {
           this.setAttribute(key, value);
         }
-      };
-
-      const renderAttributes = (attributes) => {
-        if (typeof attributes === 'function') {
-          return renderAttributes(attributes(this));
-        } else if (attributes instanceof Promise) {
-          return attributes.then((finalAttributes) => { return renderAttributes(finalAttributes); });
-        } else if (typeof attributes === 'object' && attributes != null) {
-          return Promise.all(Object.keys(attributes).map((key) => renderAttribute(key, attributes[key])));
-        }
+        return value;
       };
 
       const renderChildElement = (childElement, placeHolder) => {
@@ -77,7 +113,10 @@ const viewPropertyDescriptors = {
         } else if (typeof childElement === 'function') {
           return renderChildElement(childElement(this), placeHolder);
         } else if (childElement instanceof Promise) {
-          return childElement.then((finalChildElement) => { return renderChildElement(finalChildElement, placeHolder); });
+          return childElement
+            .then((finalChildElement) => {
+              return renderChildElement(finalChildElement, placeHolder);
+            });
         }
 
         let returnValue;
@@ -103,7 +142,10 @@ const viewPropertyDescriptors = {
         if (typeof childElements === 'function') {
           return renderChildElements(childElements(this));
         } else if (childElements instanceof Promise) {
-          return childElements.then((finalChildElements) => { return renderChildElements(finalChildElements); });
+          return childElements
+            .then((finalChildElements) => {
+              return renderChildElements(finalChildElements);
+            });
         } else if (childElements instanceof HTMLElement) {
           return renderChildElement(childElements);
         } else if (Array.isArray(childElements)) {

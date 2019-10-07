@@ -18,17 +18,17 @@ viewFactory.todo = (collection) => {
     viewFactory.div({}, [
       () => {
         if (collection.length > 0) {
-          return viewFactory.ul({ 'class': 'list-group' }, collection.map((model, index) => {
+          return viewFactory.ul({ 'class': 'list-group', 'data': { 'data-test': true } }, collection.map((model, index) => {
             return viewFactory.li({
-              'class': ['list-group-item', 'd-flex', 'justify-content-between', 'align-items-center'].join(' ')
+              'class': ['list-group-item', 'd-flex', 'justify-content-between', 'align-items-center']
             }, [
               viewFactory.span({}, [
-                viewFactory.input({ 'type': 'checkbox'}, [], []),
+                viewFactory.input({ 'type': 'checkbox' }, [], []),
                 ' ',
                 model.entry
               ], []),
               viewFactory.span({}, [
-                viewFactory.button({ 'class': ['btn', 'btn-danger'].join(' '), 'type': 'button' }, [
+                viewFactory.button({ 'class': ['btn', 'btn-danger'], 'type': 'button' }, [
                   'Remove'
                 ], [
                   (element) => {

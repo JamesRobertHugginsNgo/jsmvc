@@ -311,11 +311,11 @@ var modelPropertyDescriptors = {
     value: function value(name) {
       var _value = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this[name];
 
-      var getter = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : function (returnFunction) {
-        return returnFunction();
+      var getter = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : function (getterFunction) {
+        return getterFunction();
       };
-      var setter = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : function (value, mainFunction) {
-        mainFunction();
+      var setter = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : function (value, setterFunction) {
+        setterFunction();
       };
 
       if (!this.__propertyData) {
@@ -499,32 +499,62 @@ var viewPropertyDescriptors = {
         this.removeChild(this.firstChild);
       }
 
-      var renderAttribute = function renderAttribute(key, value) {
-        if (_typeof(value) === 'object' && value !== null && !Array.isArray(value)) {
-          return renderAttributes(value);
-        } else if (typeof value === 'function') {
-          return renderAttribute(key, value(_this5));
-        } else if (value instanceof Promise) {
-          return value.then(function (finalAttribute) {
-            return renderAttribute(finalAttribute);
+      var renderAttributes = function renderAttributes(value, key) {
+        if (value == null || value === false) {
+          return value;
+        }
+
+        if (value instanceof Promise) {
+          return value.then(function (finalValue) {
+            return renderAttributes(finalValue, key);
           });
-        } else if (value != null) {
+        }
+
+        if (Array.isArray(value)) {
+          var promises = [];
+          value.forEach(function (item, index) {
+            value[index] = renderAttributes(item);
+
+            if (value[index] instanceof Promise) {
+              promises.push(value[index].then(function (finalItem) {
+                value[index] = finalItem;
+              }));
+            }
+          });
+
+          if (promises.length > 0) {
+            return Promise.all(promises).then(function () {
+              return renderAttributes(value.join(' '), key);
+            });
+          }
+
+          return renderAttributes(value.join(' '), key);
+        }
+
+        if (_typeof(value) === 'object') {
+          var _promises = [];
+
+          for (var _key5 in value) {
+            _promises.push(renderAttributes(value[_key5], _key5));
+          }
+
+          return Promise.all(_promises);
+        }
+
+        if (typeof value === 'function') {
+          return renderAttributes(value(), key);
+        }
+
+        if (typeof value === 'boolean') {
+          renderAttributes('', key);
+          return value;
+        }
+
+        if (key) {
           _this5.setAttribute(key, value);
         }
-      };
 
-      var renderAttributes = function renderAttributes(attributes) {
-        if (typeof attributes === 'function') {
-          return renderAttributes(attributes(_this5));
-        } else if (attributes instanceof Promise) {
-          return attributes.then(function (finalAttributes) {
-            return renderAttributes(finalAttributes);
-          });
-        } else if (_typeof(attributes) === 'object' && attributes != null) {
-          return Promise.all(Object.keys(attributes).map(function (key) {
-            return renderAttribute(key, attributes[key]);
-          }));
-        }
+        return value;
       };
 
       var renderChildElement = function renderChildElement(childElement, placeHolder) {

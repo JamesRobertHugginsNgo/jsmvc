@@ -9,8 +9,8 @@ const modelPropertyDescriptors = {
   },
 
   property: {
-    value(name, value = this[name], getter = function (returnFunction) { return returnFunction(); },
-      setter = function (value, mainFunction) { mainFunction(); }) {
+    value(name, value = this[name], getter = function (getterFunction) { return getterFunction(); },
+      setter = function (value, setterFunction) { setterFunction(); }) {
 
       if (!this.__propertyData) {
         this.__propertyData = {};
