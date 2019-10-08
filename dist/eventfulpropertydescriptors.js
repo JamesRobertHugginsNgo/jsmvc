@@ -5,138 +5,219 @@ var eventfulPropertyDescriptors = {
   definedByEventfulPropertyDescriptors: {
     value: true
   },
-  __eventData: {
+  __handlerData: {
     writable: true
   },
-  __eventReferences: {
+  __handlerReferences: {
     writable: true
   },
-  on: {
+  addHandler: {
     value: function value(name, handler) {
       var _this = this;
 
       var once = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
-      var context = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : this;
-      var eventData = {
-        name: name,
+      var owner = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : this;
+      var enabled = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : true;
+      var handlerData = {
         handler: handler,
         once: once,
-        context: context
+        owner: owner,
+        enabled: enabled
       };
 
       if (this.addEventListener) {
-        eventData.listener = once ? function () {
-          handler.apply(void 0, arguments);
+        var eventListener = function eventListener() {
+          if (handlerData.enabled) {
+            handler.apply(void 0, arguments);
 
-          _this.off(name, handler, once, context, {
-            calledFromListener: true
-          });
-        } : handler;
-        this.addEventListener(name, eventData.listener, {
+            if (handlerData.once) {
+              _this.removeHandlers(handlerData.name, handlerData.handler, handlerData.once, handlerData.owner, null, {
+                calledFromEventListener: true
+              });
+            }
+          }
+        };
+
+        this.addEventListener(name, eventListener, {
           once: once
         });
+        handlerData.listener = eventListener;
       }
 
-      if (!this.__eventData) {
-        this.__eventData = [];
+      if (!this.__handlerData) {
+        this.__handlerData = {};
       }
 
-      this.__eventData.push(eventData);
+      if (!this.__handlerData[name]) {
+        this.__handlerData[name] = [];
+      }
 
-      if (context && context !== this && context.definedByEventfulPropertyDescriptors) {
-        if (!context.__eventReferences) {
-          context.__eventReferences = [];
+      this.__handlerData[name].push(handlerData);
+
+      if (owner && owner !== this && owner.definedByEventfulPropertyDescriptors) {
+        if (!owner.__handlerReferences) {
+          owner.__handlerReferences = {};
         }
 
-        context.__eventReferences.push({
+        if (!owner.__handlerReferences[name]) {
+          owner.__handlerReferences[name] = [];
+        }
+
+        owner.__handlerReferences[name].push({
           emitter: this,
-          eventData: eventData
+          handlerData: handlerData
         });
       }
 
       return this;
     }
   },
-  off: {
-    value: function value(name, handler, once, context) {
-      var options = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
+  removeHandlers: {
+    value: function value(name, handler, once, owner, enabled) {
+      var options = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : {};
 
-      if (!this.__eventData) {
+      if (!this.__handlerData) {
         return this;
       }
 
-      var index = 0;
+      for (var key in this.__handlerData) {
+        if (name == null || name === key) {
+          var index = 0;
 
-      while (index < this.__eventData.length) {
-        var eventData = this.__eventData[index];
+          while (index < this.__handlerData[key].length) {
+            var handlerData = this.__handlerData[key][index];
 
-        if ((name == null || name === eventData.name) && (handler == null || handler === eventData.handler) && (once == null || once === eventData.once) && (context == null || context === eventData.context)) {
-          if (this.removeEventListener && !options.calledFromListener) {
-            this.removeEventListener(eventData.name, eventData.listener);
-          }
-
-          this.__eventData.splice(index, 1);
-
-          if (context && context !== this && context.definedByEventfulPropertyDescriptors && context.__eventReferences) {
-            var index2 = 0;
-
-            while (index2 > context.__eventReferences.length) {
-              var eventReference = context.__eventReferences[index2];
-
-              if (eventReference.emitter === this && eventReference.eventData === eventData) {
-                context.__eventReferences.splice(index2, 1);
-              } else {
-                index2++;
+            if ((handler == null || handler === handlerData.handler) && (once == null || once === handlerData.once) && (owner == null || owner === handlerData.owner) && (enabled == null || enabled === handlerData.enabled)) {
+              if (this.removeEventListener && !options.calledFromEventListener) {
+                this.removeEventListener(key, handlerData.listener);
               }
+
+              this.__handlerData[key].splice(index, 1);
+
+              if (owner && owner !== this && owner.definedByEventfulPropertyDescriptors && owner.__handlerReferences && owner.__handlerReferences[key] && !options.calledFromCleanUpHandlers) {
+                var index2 = 0;
+
+                while (index2 > owner.__handlerReferences[key].length) {
+                  var handlerReferences = owner.__handlerReferences[key][index2];
+
+                  if (handlerReferences.emitter === this && handlerReferences.handlerData === handlerData) {
+                    owner.__handlerReferences.splice(index2, 1);
+                  } else {
+                    index2++;
+                  }
+                }
+              }
+            } else {
+              index++;
             }
           }
-        } else {
-          index++;
+
+          if (name != null) {
+            break;
+          }
         }
       }
 
       return this;
     }
   },
-  trigger: {
+  enableHandlers: {
+    value: function value(name, handler, once, owner, enabled) {
+      var _this2 = this;
+
+      if (!this.__handlerData) {
+        return this;
+      }
+
+      var _loop = function _loop(key) {
+        if (name == null || name === key) {
+          _this2.__handlerData[key].forEach(function (handlerData, index) {
+            if ((handler == null || handler === handlerData.handler) && (once == null || once === handlerData.once) && (owner == null || owner === handlerData.owner) && (enabled == null || enabled === handlerData.enabled)) {
+              _this2.__handlerData[key][index].enabled = true;
+            }
+          });
+        }
+      };
+
+      for (var key in this.__handlerData) {
+        _loop(key);
+      }
+
+      return this;
+    }
+  },
+  disableHandlers: {
+    value: function value(name, handler, once, owner, enabled) {
+      var _this3 = this;
+
+      if (!this.__handlerData) {
+        return this;
+      }
+
+      var _loop2 = function _loop2(key) {
+        if (name == null || name === key) {
+          _this3.__handlerData[key].forEach(function (handlerData, index) {
+            if ((handler == null || handler === handlerData.handler) && (once == null || once === handlerData.once) && (owner == null || owner === handlerData.owner) && (enabled == null || enabled === handlerData.enabled)) {
+              _this3.__handlerData[key][index].enabled = false;
+            }
+          });
+        }
+      };
+
+      for (var key in this.__handlerData) {
+        _loop2(key);
+      }
+
+      return this;
+    }
+  },
+  triggerHandlers: {
     value: function value(name) {
       for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
         args[_key - 1] = arguments[_key];
       }
 
-      if (!this.__eventData) {
+      if (!this.__handlerData || !this.__handlerData[name]) {
         return this;
       }
 
-      this.__eventData.forEach(function (eventData) {
-        if (name === eventData.name) {
-          var _eventData$handler;
+      this.__handlerData[name].forEach(function (handlerData) {
+        if (handlerData.handler.enabled) {
+          var _handlerData$handler;
 
-          (_eventData$handler = eventData.handler).call.apply(_eventData$handler, [eventData.context].concat(args));
+          (_handlerData$handler = handlerData.handler).call.apply(_handlerData$handler, [handlerData.context].concat(args));
         }
       });
 
-      this.off(name, null, true, null);
+      this.removeHandlers(name, null, true, null, true);
       return this;
     }
   },
-  removeEventReferences: {
-    value: function value(emitter, eventData) {
-      if (!this.__eventReferences) {
+  cleanUpHandlers: {
+    value: function value() {
+      var _this4 = this;
+
+      this.removeHandlers();
+
+      if (!this.__handlerReferences) {
         return this;
       }
 
-      var eventReferences = Array.from(this.__eventReferences);
-      eventReferences.forEach(function (eventReference) {
-        if ((emitter == null || emitter === eventReference.emitter) && (eventData == null || eventData === eventReference.eventData)) {
-          var _eventReference$event = eventReference.eventData,
-              name = _eventReference$event.name,
-              handler = _eventReference$event.handler,
-              once = _eventReference$event.once,
-              context = _eventReference$event.context;
-          eventReference.emitter.off(name, handler, once, context);
-        }
-      });
+      var _loop3 = function _loop3(key) {
+        _this4.__handlerReferences[key].forEach(function (handlerReference) {
+          var _handlerReference$eve = handlerReference.eventData,
+              handler = _handlerReference$eve.handler,
+              once = _handlerReference$eve.once;
+          handlerReference.emitter.removeHandlers(key, handler, once, _this4, null, {
+            calledFromCleanUpHandlers: true
+          });
+        });
+      };
+
+      for (var key in this.__handlerReferences) {
+        _loop3(key);
+      }
+
       return this;
     }
   }
