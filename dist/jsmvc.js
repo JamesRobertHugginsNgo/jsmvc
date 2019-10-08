@@ -103,7 +103,11 @@ var collectionPropertyDescriptors = {
       var returnValue = (_Array$prototype$meth = Array.prototype[method]).call.apply(_Array$prototype$meth, [this.__collectionData].concat(args));
 
       this.finalizeData(startingLength);
-      this.trigger('change');
+
+      if (this.definedByEventfulPropertyDescriptors) {
+        this.triggerHandlers('change');
+      }
+
       return returnValue;
     }
   };
@@ -130,6 +134,7 @@ var collectionPropertyDescriptors = {
 function collectionFactory() {
   var arr = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
   var obj = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  console.log('COLLECTION FACTORY');
 
   if (!obj.definedByEventfulPropertyDescriptors) {
     Object.defineProperties(obj, eventfulPropertyDescriptors);
@@ -216,6 +221,11 @@ var eventfulPropertyDescriptors = {
       return this;
     }
   },
+  on: {
+    value: function value() {
+      return this.addHandler.apply(this, arguments);
+    }
+  },
   removeHandlers: {
     value: function value(name, handler, once, owner, enabled) {
       var options = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : {};
@@ -263,6 +273,11 @@ var eventfulPropertyDescriptors = {
       }
 
       return this;
+    }
+  },
+  off: {
+    value: function value() {
+      return this.removeHandlers.apply(this, arguments);
     }
   },
   enableHandlers: {
@@ -326,7 +341,7 @@ var eventfulPropertyDescriptors = {
       }
 
       this.__handlerData[name].forEach(function (handlerData) {
-        if (handlerData.handler.enabled) {
+        if (handlerData.enabled) {
           var _handlerData$handler;
 
           (_handlerData$handler = handlerData.handler).call.apply(_handlerData$handler, [handlerData.context].concat(args));
@@ -335,6 +350,11 @@ var eventfulPropertyDescriptors = {
 
       this.removeHandlers(name, null, true, null, true);
       return this;
+    }
+  },
+  trigger: {
+    value: function value() {
+      return this.triggerHandlers.apply(this, arguments);
     }
   },
   cleanUpHandlers: {
@@ -406,7 +426,7 @@ var modelPropertyDescriptors = {
           if (this.__propertyData[name] !== value) {
             var oldValue = this.__propertyData[name];
             setter.call(this, value, function () {
-              if (_this8.definedByEventfulPropertyDescriptors && oldValue !== value) {
+              if (_this8.definedByEventfulPropertyDescriptors) {
                 _this8.__propertyData[name] = value;
 
                 _this8.trigger('change', name, value, oldValue);
@@ -460,7 +480,7 @@ function modelFactory() {
     var propertyDescriptor = Object.getOwnPropertyDescriptor(obj, key);
 
     if (!propertyDescriptor.get && !propertyDescriptor.set) {
-      obj.property(key);
+      obj.setProperty(key);
     }
   }
 

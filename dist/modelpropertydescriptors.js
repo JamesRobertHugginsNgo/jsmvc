@@ -39,7 +39,7 @@ var modelPropertyDescriptors = {
           if (this.__propertyData[name] !== value) {
             var oldValue = this.__propertyData[name];
             setter.call(this, value, function () {
-              if (_this.definedByEventfulPropertyDescriptors && oldValue !== value) {
+              if (_this.definedByEventfulPropertyDescriptors) {
                 _this.__propertyData[name] = value;
 
                 _this.trigger('change', name, value, oldValue);
@@ -93,7 +93,7 @@ function modelFactory() {
     var propertyDescriptor = Object.getOwnPropertyDescriptor(obj, key);
 
     if (!propertyDescriptor.get && !propertyDescriptor.set) {
-      obj.property(key);
+      obj.setProperty(key);
     }
   }
 

@@ -84,7 +84,9 @@ const collectionPropertyDescriptors = {
         const returnValue = Array.prototype[method].call(this.__collectionData, ...args);
         this.finalizeData(startingLength);
 
-        this.trigger('change');
+        if (this.definedByEventfulPropertyDescriptors) {
+          this.triggerHandlers('change');
+        }
 
         return returnValue;
       }
@@ -106,6 +108,8 @@ const collectionPropertyDescriptors = {
 
 /* exported collectionFactory */
 function collectionFactory(arr = [], obj = {}) {
+  console.log('COLLECTION FACTORY');
+
   if (!obj.definedByEventfulPropertyDescriptors) {
     Object.defineProperties(obj, eventfulPropertyDescriptors);
   }

@@ -72,6 +72,11 @@ var eventfulPropertyDescriptors = {
       return this;
     }
   },
+  on: {
+    value: function value() {
+      return this.addHandler.apply(this, arguments);
+    }
+  },
   removeHandlers: {
     value: function value(name, handler, once, owner, enabled) {
       var options = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : {};
@@ -119,6 +124,11 @@ var eventfulPropertyDescriptors = {
       }
 
       return this;
+    }
+  },
+  off: {
+    value: function value() {
+      return this.removeHandlers.apply(this, arguments);
     }
   },
   enableHandlers: {
@@ -182,7 +192,7 @@ var eventfulPropertyDescriptors = {
       }
 
       this.__handlerData[name].forEach(function (handlerData) {
-        if (handlerData.handler.enabled) {
+        if (handlerData.enabled) {
           var _handlerData$handler;
 
           (_handlerData$handler = handlerData.handler).call.apply(_handlerData$handler, [handlerData.context].concat(args));
@@ -191,6 +201,11 @@ var eventfulPropertyDescriptors = {
 
       this.removeHandlers(name, null, true, null, true);
       return this;
+    }
+  },
+  trigger: {
+    value: function value() {
+      return this.triggerHandlers.apply(this, arguments);
     }
   },
   cleanUpHandlers: {

@@ -53,6 +53,12 @@ const eventfulPropertyDescriptors = {
     }
   },
 
+  on: {
+    value(...args) {
+      return this.addHandler(...args);
+    }
+  },
+
   removeHandlers: {
     value(name, handler, once, owner, enabled, options = {}) {
       if (!this.__handlerData) {
@@ -100,6 +106,12 @@ const eventfulPropertyDescriptors = {
       }
 
       return this;
+    }
+  },
+
+  off: {
+    value(...args) {
+      return this.removeHandlers(...args);
     }
   },
 
@@ -158,7 +170,7 @@ const eventfulPropertyDescriptors = {
       }
 
       this.__handlerData[name].forEach((handlerData) => {
-        if (handlerData.handler.enabled) {
+        if (handlerData.enabled) {
           handlerData.handler.call(handlerData.context, ...args);
         }
       });
@@ -166,6 +178,12 @@ const eventfulPropertyDescriptors = {
       this.removeHandlers(name, null, true, null, true);
 
       return this;
+    }
+  },
+
+  trigger: {
+    value(...args) {
+      return this.triggerHandlers(...args);
     }
   },
 

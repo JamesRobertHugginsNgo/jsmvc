@@ -101,7 +101,11 @@ var collectionPropertyDescriptors = {
       var returnValue = (_Array$prototype$meth = Array.prototype[method]).call.apply(_Array$prototype$meth, [this.__collectionData].concat(args));
 
       this.finalizeData(startingLength);
-      this.trigger('change');
+
+      if (this.definedByEventfulPropertyDescriptors) {
+        this.triggerHandlers('change');
+      }
+
       return returnValue;
     }
   };
@@ -128,6 +132,7 @@ var collectionPropertyDescriptors = {
 function collectionFactory() {
   var arr = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
   var obj = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  console.log('COLLECTION FACTORY');
 
   if (!obj.definedByEventfulPropertyDescriptors) {
     Object.defineProperties(obj, eventfulPropertyDescriptors);

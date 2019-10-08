@@ -5,7 +5,7 @@ viewFactory.todo = (collection) => {
     viewFactory.div({ 'class': 'form-group' }, [
       viewFactory.input({ 'class': 'form-control', 'type': 'text' }, [], [
         (element) => {
-          element.on('keyup', (event) => {
+          element.addHandler('keyup', (event) => {
             if (event.which === 13 && element.value) {
               collection.push(modelFactory({ entry: element.value }));
               element.value = '';
@@ -32,7 +32,7 @@ viewFactory.todo = (collection) => {
                   'Remove'
                 ], [
                   (element) => {
-                    element.on('click', () => {
+                    element.addHandler('click', () => {
                       collection.splice(index, 1);
                     });
                   }
@@ -44,7 +44,8 @@ viewFactory.todo = (collection) => {
       }
     ], [
       (element) => {
-        collection.on('change', () => {
+        collection.addHandler('change', () => {
+          console.log('COLLECTION CHANGED');
           element.render();
         });
       }
