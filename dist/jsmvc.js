@@ -10,30 +10,9 @@ function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.
 
 function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
 
-/* global eventfulPropertyDescriptors collectionPropertyDescriptors */
+/* global eventfulPropertyDescriptors */
 
-/* exported collectionFactory */
-function collectionFactory() {
-  var arr = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-  var obj = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-  if (!obj.definedByEventfulPropertyDescriptors) {
-    Object.defineProperties(obj, eventfulPropertyDescriptors);
-  }
-
-  if (!obj.definedByCollectionPropertyDescriptors) {
-    Object.defineProperties(obj, collectionPropertyDescriptors);
-  }
-
-  obj.push.apply(obj, _toConsumableArray(arr));
-  return obj;
-}
-/* exported cf */
-
-
-var cf = collectionFactory;
 /* exported collectionPropertyDescriptors */
-
 var collectionPropertyDescriptors = {
   definedByCollectionPropertyDescriptors: {
     value: true
@@ -57,19 +36,28 @@ var collectionPropertyDescriptors = {
             Object.defineProperty(_this, key, {
               configurable: true,
               enumerable: true,
-              get: function get() {
-                return this.__collectionData[key];
-              },
               set: function set(value) {
+                var _this2 = this;
+
                 if (this.__collectionData[key] !== value) {
                   var oldValue = this.__collectionData[key];
-                  this.__collectionData[key] = value;
+                  this.itemSetter.call(this, value, function () {
+                    _this2.__collectionData[key] = value;
 
-                  if (this.definedByEventfulPropertyDescriptors) {
-                    this.trigger('change', key, value, oldValue);
-                    this.trigger("change:".concat(key), value, oldValue);
-                  }
+                    if (_this2.definedByEventfulPropertyDescriptors) {
+                      _this2.trigger('change', key, value, oldValue);
+
+                      _this2.trigger("change:".concat(key), value, oldValue);
+                    }
+                  });
                 }
+              },
+              get: function get() {
+                var _this3 = this;
+
+                return this.itemGetter(function () {
+                  return _this3.__collectionData[key];
+                });
               }
             });
             startingLength++;
@@ -79,6 +67,16 @@ var collectionPropertyDescriptors = {
           startingLength--;
         }
       }
+    }
+  },
+  itemSetter: {
+    value: function value(_value, basicSetter) {
+      basicSetter();
+    }
+  },
+  itemGetter: {
+    value: function value(basicGetter) {
+      return basicGetter();
     }
   },
   toArray: {
@@ -127,7 +125,25 @@ var collectionPropertyDescriptors = {
     }
   };
 });
+/* exported collectionFactory */
+
+function collectionFactory() {
+  var arr = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+  var obj = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+  if (!obj.definedByEventfulPropertyDescriptors) {
+    Object.defineProperties(obj, eventfulPropertyDescriptors);
+  }
+
+  if (!obj.definedByCollectionPropertyDescriptors) {
+    Object.defineProperties(obj, collectionPropertyDescriptors);
+  }
+
+  obj.push.apply(obj, _toConsumableArray(arr));
+  return obj;
+}
 /* exported eventfulPropertyDescriptors */
+
 
 var eventfulPropertyDescriptors = {
   definedByEventfulPropertyDescriptors: {
@@ -141,7 +157,7 @@ var eventfulPropertyDescriptors = {
   },
   addHandler: {
     value: function value(name, handler) {
-      var _this2 = this;
+      var _this4 = this;
 
       var once = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
       var owner = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : this;
@@ -159,7 +175,7 @@ var eventfulPropertyDescriptors = {
             handler.apply(void 0, arguments);
 
             if (handlerData.once) {
-              _this2.removeHandlers(handlerData.name, handlerData.handler, handlerData.once, handlerData.owner, null, {
+              _this4.removeHandlers(handlerData.name, handlerData.handler, handlerData.once, handlerData.owner, null, {
                 calledFromEventListener: true
               });
             }
@@ -251,7 +267,7 @@ var eventfulPropertyDescriptors = {
   },
   enableHandlers: {
     value: function value(name, handler, once, owner, enabled) {
-      var _this3 = this;
+      var _this5 = this;
 
       if (!this.__handlerData) {
         return this;
@@ -259,9 +275,9 @@ var eventfulPropertyDescriptors = {
 
       var _loop = function _loop(key) {
         if (name == null || name === key) {
-          _this3.__handlerData[key].forEach(function (handlerData, index) {
+          _this5.__handlerData[key].forEach(function (handlerData, index) {
             if ((handler == null || handler === handlerData.handler) && (once == null || once === handlerData.once) && (owner == null || owner === handlerData.owner) && (enabled == null || enabled === handlerData.enabled)) {
-              _this3.__handlerData[key][index].enabled = true;
+              _this5.__handlerData[key][index].enabled = true;
             }
           });
         }
@@ -276,7 +292,7 @@ var eventfulPropertyDescriptors = {
   },
   disableHandlers: {
     value: function value(name, handler, once, owner, enabled) {
-      var _this4 = this;
+      var _this6 = this;
 
       if (!this.__handlerData) {
         return this;
@@ -284,9 +300,9 @@ var eventfulPropertyDescriptors = {
 
       var _loop2 = function _loop2(key) {
         if (name == null || name === key) {
-          _this4.__handlerData[key].forEach(function (handlerData, index) {
+          _this6.__handlerData[key].forEach(function (handlerData, index) {
             if ((handler == null || handler === handlerData.handler) && (once == null || once === handlerData.once) && (owner == null || owner === handlerData.owner) && (enabled == null || enabled === handlerData.enabled)) {
-              _this4.__handlerData[key][index].enabled = false;
+              _this6.__handlerData[key][index].enabled = false;
             }
           });
         }
@@ -323,7 +339,7 @@ var eventfulPropertyDescriptors = {
   },
   cleanUpHandlers: {
     value: function value() {
-      var _this5 = this;
+      var _this7 = this;
 
       this.removeHandlers();
 
@@ -332,11 +348,11 @@ var eventfulPropertyDescriptors = {
       }
 
       var _loop3 = function _loop3(key) {
-        _this5.__handlerReferences[key].forEach(function (handlerReference) {
+        _this7.__handlerReferences[key].forEach(function (handlerReference) {
           var _handlerReference$eve = handlerReference.eventData,
               handler = _handlerReference$eve.handler,
               once = _handlerReference$eve.once;
-          handlerReference.emitter.removeHandlers(key, handler, once, _this5, null, {
+          handlerReference.emitter.removeHandlers(key, handler, once, _this7, null, {
             calledFromCleanUpHandlers: true
           });
         });
@@ -350,8 +366,83 @@ var eventfulPropertyDescriptors = {
     }
   }
 };
-/* global eventfulPropertyDescriptors modelPropertyDescriptors */
+/* global eventfulPropertyDescriptors */
 
+/* exported modelPropertyDescriptors */
+
+var modelPropertyDescriptors = {
+  definedByModelPropertyDescriptors: {
+    value: true
+  },
+  __propertyData: {
+    writable: true
+  },
+  setProperty: {
+    value: function value(name) {
+      var _value2 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this[name];
+
+      var setter = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : function (value, basicSetter) {
+        basicSetter();
+      };
+      var getter = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : function (basicGetter) {
+        return basicGetter();
+      };
+
+      if (!this.__propertyData) {
+        this.__propertyData = {};
+      }
+
+      if (_value2 !== undefined) {
+        this.__propertyData[name] = _value2;
+      }
+
+      delete this[name];
+      Object.defineProperty(this, name, {
+        configurable: true,
+        enumerable: true,
+        set: function set(value) {
+          var _this8 = this;
+
+          if (this.__propertyData[name] !== value) {
+            var oldValue = this.__propertyData[name];
+            setter.call(this, value, function () {
+              if (_this8.definedByEventfulPropertyDescriptors && oldValue !== value) {
+                _this8.__propertyData[name] = value;
+
+                _this8.trigger('change', name, value, oldValue);
+
+                _this8.trigger("change:".concat(name), value, oldValue);
+              }
+            });
+          }
+        },
+        get: function get() {
+          var _this9 = this;
+
+          return getter.call(this, function () {
+            return _this9.__propertyData[name];
+          });
+        }
+      });
+    }
+  },
+  unsetProperty: {
+    value: function value(name) {
+      var value = this.__propertyData[name];
+      delete this.__propertyData[name];
+      delete this[name];
+
+      if (value !== undefined) {
+        this[name] = value;
+      }
+    }
+  },
+  toJSON: {
+    value: function value() {
+      return Object.assign({}, this.__propertyData);
+    }
+  }
+};
 /* exported modelFactory */
 
 function modelFactory() {
@@ -375,86 +466,195 @@ function modelFactory() {
 
   return obj;
 }
-/* exported mf */
+/* global eventfulPropertyDescriptors */
+
+/* exported viewPropertyDescriptors */
 
 
-var mf = modelFactory;
-/* exported modelPropertyDescriptors */
-
-var modelPropertyDescriptors = {
-  definedByModelPropertyDescriptors: {
+var viewPropertyDescriptors = {
+  definedByViewPropertyDescriptors: {
     value: true
   },
-  __propertyData: {
+  __attributes: {
     writable: true
   },
-  property: {
-    value: function value(name) {
-      var _value = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this[name];
+  setAttributes: {
+    value: function value(attributes) {
+      this.__attributes = attributes;
+      return this;
+    }
+  },
+  __childElements: {
+    writable: true
+  },
+  setChildElements: {
+    value: function value(childElements) {
+      this.__childElements = childElements;
+      return this;
+    }
+  },
+  promise: {
+    writable: true
+  },
+  render: {
+    value: function value(callBacks) {
+      var _this10 = this;
 
-      var getter = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : function (getterFunction) {
-        return getterFunction();
-      };
-      var setter = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : function (value, setterFunction) {
-        setterFunction();
-      };
+      var calledFromFactory = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
-      if (!this.__propertyData) {
-        this.__propertyData = {};
+      if (this.hasAttributes()) {
+        var attributeKeys = [];
+
+        for (var index = 0, length = this.attributes.length; index < length; index++) {
+          attributeKeys.push(this.attributes[index].name);
+        }
+
+        attributeKeys.forEach(function (key) {
+          _this10.removeAttribute(key);
+        });
       }
 
-      if (_value !== undefined) {
-        this.__propertyData[name] = _value;
+      while (this.firstChild) {
+        this.removeChild(this.firstChild);
       }
 
-      delete this[name];
-      Object.defineProperty(this, name, {
-        configurable: true,
-        enumerable: true,
-        get: function get() {
-          var _this6 = this;
+      var renderAttributes = function renderAttributes(value, key) {
+        if (value == null || value === false) {
+          return value;
+        }
 
-          return getter.call(this, function () {
-            return _this6.__propertyData[name];
+        if (value instanceof Promise) {
+          return value.then(function (finalValue) {
+            return renderAttributes(finalValue, key);
           });
-        },
-        set: function set(value) {
-          var _this7 = this;
+        }
 
-          if (this.__propertyData[name] !== value) {
-            var oldValue = this.__propertyData[name];
-            setter.call(this, value, function () {
-              _this7.__propertyData[name] = value;
-            });
+        if (Array.isArray(value)) {
+          var promises = [];
+          value.forEach(function (item, index) {
+            value[index] = renderAttributes(item);
 
-            if (this.definedByEventfulPropertyDescriptors) {
-              this.trigger('change', name, value, oldValue);
-              this.trigger("change:".concat(name), value, oldValue);
+            if (value[index] instanceof Promise) {
+              promises.push(value[index].then(function (finalItem) {
+                value[index] = finalItem;
+              }));
             }
+          });
+
+          if (promises.length > 0) {
+            return Promise.all(promises).then(function () {
+              return renderAttributes(value.join(' '), key);
+            });
+          }
+
+          return renderAttributes(value.join(' '), key);
+        }
+
+        if (_typeof(value) === 'object') {
+          var _promises = [];
+
+          for (var _key4 in value) {
+            _promises.push(renderAttributes(value[_key4], _key4));
+          }
+
+          return Promise.all(_promises);
+        }
+
+        if (typeof value === 'function') {
+          return renderAttributes(value(), key);
+        }
+
+        if (typeof value === 'boolean') {
+          renderAttributes('', key);
+          return value;
+        }
+
+        if (key) {
+          _this10.setAttribute(key, value);
+        }
+
+        return value;
+      };
+
+      var renderChildElement = function renderChildElement(childElement, placeHolder) {
+        placeHolder = placeHolder || _this10.appendChild(document.createElement('span'));
+
+        if (Array.isArray(childElement)) {
+          placeHolder.parentNode.removeChild(placeHolder);
+          return renderChildElements(childElement);
+        } else if (typeof childElement === 'function') {
+          return renderChildElement(childElement(_this10), placeHolder);
+        } else if (childElement instanceof Promise) {
+          return childElement.then(function (finalChildElement) {
+            return renderChildElement(finalChildElement, placeHolder);
+          });
+        }
+
+        var returnValue;
+
+        if (childElement instanceof HTMLElement || childElement instanceof Text) {
+          placeHolder.parentNode.insertBefore(childElement, placeHolder);
+
+          if (childElement.definedByViewPropertyDescriptors) {
+            returnValue = childElement.promise;
+          }
+        } else if (typeof childElement === 'string') {
+          var tempElement = document.createElement('div');
+          tempElement.innerHTML = childElement;
+
+          while (tempElement.firstChild) {
+            placeHolder.parentNode.insertBefore(tempElement.firstChild, placeHolder);
           }
         }
-      });
-    }
-  },
-  unproperty: {
-    value: function value(name) {
-      var value = this.__propertyData[name];
-      delete this.__propertyData[name];
-      delete this[name];
 
-      if (value !== undefined) {
-        this[name] = value;
-      }
-    }
-  },
-  toJSON: {
-    value: function value() {
-      return Object.assign({}, this.__propertyData);
+        placeHolder.parentNode.removeChild(placeHolder);
+        return returnValue;
+      };
+
+      var renderChildElements = function renderChildElements(childElements) {
+        if (typeof childElements === 'function') {
+          return renderChildElements(childElements(_this10));
+        } else if (childElements instanceof Promise) {
+          return childElements.then(function (finalChildElements) {
+            return renderChildElements(finalChildElements);
+          });
+        } else if (childElements instanceof HTMLElement) {
+          return renderChildElement(childElements);
+        } else if (Array.isArray(childElements)) {
+          return Promise.all(childElements.map(function (childElement) {
+            return renderChildElement(childElement);
+          }));
+        } else if (childElements != null) {
+          return renderChildElements([childElements]);
+        }
+      };
+
+      this.promise = Promise.all([renderAttributes(this.__attributes), renderChildElements(this.__childElements)]).then(function () {
+        var promises = [];
+
+        if (!calledFromFactory && _this10.__childElements && Array.isArray(_this10.__childElements)) {
+          _this10.__childElements.forEach(function (childElement) {
+            if (childElement.definedByViewPropertyDescriptors) {
+              promises.push(childElement.render().promise);
+            }
+          });
+        }
+
+        return Promise.all(promises);
+      }).then(function () {
+        if (callBacks) {
+          callBacks = Array.isArray(callBacks) ? callBacks : [callBacks];
+          return Promise.all(callBacks.map(function (callBack) {
+            return callBack(_this10);
+          }));
+        }
+      }).then(function () {
+        return _this10;
+      });
+      return this;
     }
   }
 };
-/* global eventfulPropertyDescriptors viewPropertyDescriptors */
-
 /* exported viewFactory */
 
 function viewFactory(element, attributes, childElements, callBacks) {
@@ -521,199 +721,10 @@ function viewFactory(element, attributes, childElements, callBacks) {
 
 ['a', 'abbr', 'acronym', 'address', 'applet', 'area', 'article', 'aside', 'audio', 'b', 'base', 'basefont', 'bdi', 'bdo', 'big', 'blockquote', 'body', 'br', 'button', 'canvas', 'caption', 'center', 'cite', 'code', 'col', 'colgroup', 'datalist', 'dd', 'del', 'details', 'dfn', 'dialog', 'dir', 'div', 'dl', 'dt', 'em', 'embed', 'fieldset', 'figcaption', 'figure', 'font', 'footer', 'form', 'frame', 'frameset', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'head', 'header', 'hr', 'viewFactoryl', 'i', 'iframe', 'img', 'input', 'ins', 'kbd', 'keygen', 'label', 'legend', 'li', 'link', 'main', 'map', 'mark', 'menu', 'menuitem', 'meta', 'meter', 'nav', 'noframes', 'noscript', 'object', 'ol', 'optgroup', 'option', 'output', 'p', 'param', 'picture', 'pre', 'progress', 'q', 'rp', 'rt', 'ruby', 's', 'samp', 'script', 'section', 'select', 'small', 'source', 'span', 'strike', 'strong', 'style', 'sub', 'summary', 'sup', 'table', 'tbody', 'td', 'textarea', 'tfoot', 'th', 'thead', 'time', 'title', 'tr', 'track', 'tt', 'u', 'ul', 'var', 'video', 'wbr'].forEach(function (element) {
   viewFactory[element] = function () {
-    for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-      args[_key4] = arguments[_key4];
+    for (var _len4 = arguments.length, args = new Array(_len4), _key5 = 0; _key5 < _len4; _key5++) {
+      args[_key5] = arguments[_key5];
     }
 
     return viewFactory.apply(void 0, [element].concat(args));
   };
 });
-/* exported vf */
-
-var vf = viewFactory;
-/* exported viewPropertyDescriptors */
-
-var viewPropertyDescriptors = {
-  definedByViewPropertyDescriptors: {
-    value: true
-  },
-  __attributes: {
-    writable: true
-  },
-  setAttributes: {
-    value: function value(attributes) {
-      this.__attributes = attributes;
-      return this;
-    }
-  },
-  __childElements: {
-    writable: true
-  },
-  setChildElements: {
-    value: function value(childElements) {
-      this.__childElements = childElements;
-      return this;
-    }
-  },
-  promise: {
-    writable: true
-  },
-  render: {
-    value: function value(callBacks) {
-      var _this8 = this;
-
-      var calledFromFactory = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-
-      if (this.hasAttributes()) {
-        var attributeKeys = [];
-
-        for (var index = 0, length = this.attributes.length; index < length; index++) {
-          attributeKeys.push(this.attributes[index].name);
-        }
-
-        attributeKeys.forEach(function (key) {
-          _this8.removeAttribute(key);
-        });
-      }
-
-      while (this.firstChild) {
-        this.removeChild(this.firstChild);
-      }
-
-      var renderAttributes = function renderAttributes(value, key) {
-        if (value == null || value === false) {
-          return value;
-        }
-
-        if (value instanceof Promise) {
-          return value.then(function (finalValue) {
-            return renderAttributes(finalValue, key);
-          });
-        }
-
-        if (Array.isArray(value)) {
-          var promises = [];
-          value.forEach(function (item, index) {
-            value[index] = renderAttributes(item);
-
-            if (value[index] instanceof Promise) {
-              promises.push(value[index].then(function (finalItem) {
-                value[index] = finalItem;
-              }));
-            }
-          });
-
-          if (promises.length > 0) {
-            return Promise.all(promises).then(function () {
-              return renderAttributes(value.join(' '), key);
-            });
-          }
-
-          return renderAttributes(value.join(' '), key);
-        }
-
-        if (_typeof(value) === 'object') {
-          var _promises = [];
-
-          for (var _key5 in value) {
-            _promises.push(renderAttributes(value[_key5], _key5));
-          }
-
-          return Promise.all(_promises);
-        }
-
-        if (typeof value === 'function') {
-          return renderAttributes(value(), key);
-        }
-
-        if (typeof value === 'boolean') {
-          renderAttributes('', key);
-          return value;
-        }
-
-        if (key) {
-          _this8.setAttribute(key, value);
-        }
-
-        return value;
-      };
-
-      var renderChildElement = function renderChildElement(childElement, placeHolder) {
-        placeHolder = placeHolder || _this8.appendChild(document.createElement('span'));
-
-        if (Array.isArray(childElement)) {
-          placeHolder.parentNode.removeChild(placeHolder);
-          return renderChildElements(childElement);
-        } else if (typeof childElement === 'function') {
-          return renderChildElement(childElement(_this8), placeHolder);
-        } else if (childElement instanceof Promise) {
-          return childElement.then(function (finalChildElement) {
-            return renderChildElement(finalChildElement, placeHolder);
-          });
-        }
-
-        var returnValue;
-
-        if (childElement instanceof HTMLElement || childElement instanceof Text) {
-          placeHolder.parentNode.insertBefore(childElement, placeHolder);
-
-          if (childElement.definedByViewPropertyDescriptors) {
-            returnValue = childElement.promise;
-          }
-        } else if (typeof childElement === 'string') {
-          var tempElement = document.createElement('div');
-          tempElement.innerHTML = childElement;
-
-          while (tempElement.firstChild) {
-            placeHolder.parentNode.insertBefore(tempElement.firstChild, placeHolder);
-          }
-        }
-
-        placeHolder.parentNode.removeChild(placeHolder);
-        return returnValue;
-      };
-
-      var renderChildElements = function renderChildElements(childElements) {
-        if (typeof childElements === 'function') {
-          return renderChildElements(childElements(_this8));
-        } else if (childElements instanceof Promise) {
-          return childElements.then(function (finalChildElements) {
-            return renderChildElements(finalChildElements);
-          });
-        } else if (childElements instanceof HTMLElement) {
-          return renderChildElement(childElements);
-        } else if (Array.isArray(childElements)) {
-          return Promise.all(childElements.map(function (childElement) {
-            return renderChildElement(childElement);
-          }));
-        } else if (childElements != null) {
-          return renderChildElements([childElements]);
-        }
-      };
-
-      this.promise = Promise.all([renderAttributes(this.__attributes), renderChildElements(this.__childElements)]).then(function () {
-        var promises = [];
-
-        if (!calledFromFactory && _this8.__childElements && Array.isArray(_this8.__childElements)) {
-          _this8.__childElements.forEach(function (childElement) {
-            if (childElement.definedByViewPropertyDescriptors) {
-              promises.push(childElement.render().promise);
-            }
-          });
-        }
-
-        return Promise.all(promises);
-      }).then(function () {
-        if (callBacks) {
-          callBacks = Array.isArray(callBacks) ? callBacks : [callBacks];
-          return Promise.all(callBacks.map(function (callBack) {
-            return callBack(_this8);
-          }));
-        }
-      }).then(function () {
-        return _this8;
-      });
-      return this;
-    }
-  }
-};

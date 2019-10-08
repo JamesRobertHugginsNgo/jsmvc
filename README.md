@@ -84,7 +84,7 @@ Models holds the data.
 ### Model Property Descriptors
 
 ``` JavaScript
-const model = ()
+const model = {};
 Object.defineProperties(model, modelPropertyDescriptors);
 ```
 
@@ -93,7 +93,7 @@ Object.defineProperties(model, modelPropertyDescriptors);
 ``` JavaScript
 const name = 'propertyA';
 const value = true;
-const setter = (value, basicSetter) => { basicSetter(value); };
+const setter = (value, basicSetter) => { basicSetter(); };
 const getter = (basicGetter) => { return systemGetter(); };
 
 model.setProperty(name, value, setter, getter);
@@ -104,10 +104,48 @@ model.setProperty(name, value, setter, getter);
 ``` JavaScript
 const name = 'propertyA';
 const value = true;
-const setter = (value, basicSetter) => { basicSetter(value); };
+const setter = (value, basicSetter) => { basicSetter(); };
 const getter = (basicGetter) => { return systemGetter(); };
 
 model.unsetProperty(name, value, setter, getter);
+```
+
+### To JSON
+
+``` JavaScript
+const json = model.toJSON();
+```
+
+### Model Factory
+
+``` JavaScript
+const model = modelFactory({ property1: true, property2: 123, property3: 'text' });
+```
+
+### Collection Property Descriptors
+
+``` JavaScript
+const collection = {};
+Object.defineProperties(collection, collectionPropertyDescriptors);
+```
+
+### Item Setter & Getter
+
+``` JavaScript
+collection.itemSetter = (value, basicSetter) => { basicSetter(value); };
+collection.itemGetter = (basicGetter) => { return systemGetter(); };
+```
+
+### To Array
+
+``` JavaScript
+const array = collection.toArray();
+```
+
+### Collection Factory
+
+``` JavaScript
+const collection = collectionFactory([ true, 123, 'text' ]);
 ```
 
 ## View Domain

@@ -25,7 +25,7 @@ const eventfulPropertyDescriptors = {
                 { calledFromEventListener: true });
             }
           }
-        }
+        };
         this.addEventListener(name, eventListener, { once });
 
         handlerData.listener = eventListener;
@@ -78,7 +78,7 @@ const eventfulPropertyDescriptors = {
               if (owner && owner !== this && owner.definedByEventfulPropertyDescriptors && owner.__handlerReferences
                 && owner.__handlerReferences[key] && !options.calledFromCleanUpHandlers) {
 
-                let index2 = 0
+                let index2 = 0;
                 while (index2 > owner.__handlerReferences[key].length) {
                   const handlerReferences = owner.__handlerReferences[key][index2];
                   if (handlerReferences.emitter === this && handlerReferences.handlerData === handlerData) {

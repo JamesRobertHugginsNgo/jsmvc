@@ -1,3 +1,5 @@
+/* global eventfulPropertyDescriptors */
+
 /* exported collectionPropertyDescriptors */
 const collectionPropertyDescriptors = {
   definedByCollectionPropertyDescriptors: {
@@ -23,19 +25,22 @@ const collectionPropertyDescriptors = {
           Object.defineProperty(this, key, {
             configurable: true,
             enumerable: true,
-            get() {
-              return this.__collectionData[key];
-            },
             set(value) {
               if (this.__collectionData[key] !== value) {
                 const oldValue = this.__collectionData[key];
-                this.__collectionData[key] = value;
-
-                if (this.definedByEventfulPropertyDescriptors) {
-                  this.trigger('change', key, value, oldValue);
-                  this.trigger(`change:${key}`, value, oldValue);
-                }
+                this.itemSetter.call(this, value, () => {
+                  this.__collectionData[key] = value;
+                  if (this.definedByEventfulPropertyDescriptors) {
+                    this.trigger('change', key, value, oldValue);
+                    this.trigger(`change:${key}`, value, oldValue);
+                  }
+                });
               }
+            },
+            get() {
+              return this.itemGetter(() => {
+                return this.__collectionData[key];
+              });
             }
           });
 
@@ -46,6 +51,17 @@ const collectionPropertyDescriptors = {
           startingLength--;
         }
       }
+    }
+  },
+
+  itemSetter: {
+    value(value, basicSetter) {
+      basicSetter();
+    }
+  },
+  itemGetter: {
+    value(basicGetter) {
+      return basicGetter();
     }
   },
 
@@ -72,7 +88,7 @@ const collectionPropertyDescriptors = {
 
         return returnValue;
       }
-    }
+    };
   });
 
 ['concat', 'includes', 'indexOf', 'join', 'lastIndexOf', 'slice', 'toSource', 'toString', 'toLocaleString', 'entries',
@@ -83,8 +99,22 @@ const collectionPropertyDescriptors = {
         if (!this.__collectionData) {
           this.__collectionData = [];
         }
-
         return Array.prototype[method].call(this.__collectionData, ...args);
       }
-    }
+    };
   });
+
+/* exported collectionFactory */
+function collectionFactory(arr = [], obj = {}) {
+  if (!obj.definedByEventfulPropertyDescriptors) {
+    Object.defineProperties(obj, eventfulPropertyDescriptors);
+  }
+
+  if (!obj.definedByCollectionPropertyDescriptors) {
+    Object.defineProperties(obj, collectionPropertyDescriptors);
+  }
+
+  obj.push(...arr);
+
+  return obj;
+}

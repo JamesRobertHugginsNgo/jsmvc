@@ -1,3 +1,5 @@
+/* global eventfulPropertyDescriptors */
+
 /* exported modelPropertyDescriptors */
 const modelPropertyDescriptors = {
   definedByModelPropertyDescriptors: {
@@ -8,9 +10,9 @@ const modelPropertyDescriptors = {
     writable: true
   },
 
-  property: {
-    value(name, value = this[name], getter = function (getterFunction) { return getterFunction(); },
-      setter = function (value, setterFunction) { setterFunction(); }) {
+  setProperty: {
+    value(name, value = this[name], setter = (value, basicSetter) => { basicSetter(); },
+      getter = (basicGetter) => { return basicGetter(); }) {
 
       if (!this.__propertyData) {
         this.__propertyData = {};
@@ -25,30 +27,28 @@ const modelPropertyDescriptors = {
       Object.defineProperty(this, name, {
         configurable: true,
         enumerable: true,
+        set(value) {
+          if (this.__propertyData[name] !== value) {
+            const oldValue = this.__propertyData[name];
+            setter.call(this, value, () => {
+              if (this.definedByEventfulPropertyDescriptors && oldValue !== value) {
+                this.__propertyData[name] = value;
+                this.trigger('change', name, value, oldValue);
+                this.trigger(`change:${name}`, value, oldValue);
+              }
+            });
+          }
+        },
         get() {
           return getter.call(this, () => {
             return this.__propertyData[name];
           });
-        },
-        set(value) {
-          if (this.__propertyData[name] !== value) {
-            const oldValue = this.__propertyData[name];
-
-            setter.call(this, value, () => {
-              this.__propertyData[name] = value;
-            });
-
-            if (this.definedByEventfulPropertyDescriptors) {
-              this.trigger('change', name, value, oldValue);
-              this.trigger(`change:${name}`, value, oldValue);
-            }
-          }
         }
-      })
+      });
     }
   },
 
-  unproperty: {
+  unsetProperty: {
     value(name) {
       const value = this.__propertyData[name];
 
@@ -67,3 +67,23 @@ const modelPropertyDescriptors = {
     }
   }
 };
+
+/* exported modelFactory */
+function modelFactory(obj = {}) {
+  if (!obj.definedByEventfulPropertyDescriptors) {
+    Object.defineProperties(obj, eventfulPropertyDescriptors);
+  }
+
+  if (!obj.definedByModelPropertyDescriptors) {
+    Object.defineProperties(obj, modelPropertyDescriptors);
+  }
+
+  for (const key in obj) {
+    const propertyDescriptor = Object.getOwnPropertyDescriptor(obj, key);
+    if (!propertyDescriptor.get && !propertyDescriptor.set) {
+      obj.property(key);
+    }
+  }
+
+  return obj;
+}
