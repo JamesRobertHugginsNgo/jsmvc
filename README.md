@@ -10,7 +10,7 @@ Enables the Model and View domain to manage event(-ish) functionalities.
 
 ``` JavaScript
 const eventful = {};
-Object.defineProperties(eventful, viewPropertyDescriptors);
+Object.defineProperties(eventful, eventfulPropertyDescriptors);
 ```
 
 ### Add Handler
