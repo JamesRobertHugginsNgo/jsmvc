@@ -13,7 +13,7 @@ const collectionPropertyDescriptors = {
   length: {
     get() {
       if (this.__collectionData) {
-        return this.__collectionData;
+        return this.__collectionData.length;
       }
       
       return 0;
