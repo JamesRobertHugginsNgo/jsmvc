@@ -4,6 +4,7 @@
   "description": "JavaScript Model View Controller",
   "main": "index.js",
   "scripts": {
+    "NPM_Install": "npm install",
     "Build": "gulp"
   },
   "keywords": [
