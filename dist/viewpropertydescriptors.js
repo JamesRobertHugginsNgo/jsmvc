@@ -175,19 +175,19 @@ var viewPropertyDescriptors = {
         this.removeChild(this.firstChild);
       }
 
-      var doRenderChildElements = function doRenderChildElements(childElement, placeholder) {
-        if (!placeholder) {
-          placeholder = _this2.appendChild(document.createTextNode(' '));
-        }
+      var docFragment = document.createDocumentFragment();
 
+      var doRenderChildElements = function doRenderChildElements(childElement, placeholder) {
+        // if (!placeholder) {
+        //   placeholder = this.appendChild(document.createTextNode(' '));
+        // }
         if (typeof childElement === 'function') {
           return doRenderChildElements(childElement(), placeholder);
         }
 
         if (_typeof(childElement) === 'object' && !(childElement instanceof HTMLElement || childElement instanceof Text)) {
           if (childElement === null) {
-            _this2.removeChild(placeholder);
-
+            placeholder.parentNode.removeChild(placeholder);
             return;
           }
 
@@ -200,16 +200,14 @@ var viewPropertyDescriptors = {
           if (Array.isArray(childElement)) {
             var _promises3 = [];
             childElement.forEach(function (item) {
-              var newPlaceholder = _this2.insertBefore(document.createTextNode(' '), placeholder);
-
+              var newPlaceholder = placeholder.parentNode.insertBefore(document.createTextNode(' '), placeholder);
               var result = doRenderChildElements(item, newPlaceholder);
 
               if (result instanceof Promise) {
                 _promises3.push(result);
               }
             });
-
-            _this2.removeChild(placeholder);
+            placeholder.parentNode.removeChild(placeholder);
 
             if (_promises3.length !== 0) {
               return Promise.all(_promises3);
@@ -221,7 +219,7 @@ var viewPropertyDescriptors = {
           var _promises2 = [];
 
           for (var key in childElement) {
-            var newPlaceholder = _this2.insertBefore(document.createTextNode(' '), placeholder);
+            var newPlaceholder = placeholder.parentNode.insertBefore(document.createTextNode(' '), placeholder);
 
             var _result2 = doRenderChildElements(childElement[key], newPlaceholder);
 
@@ -230,7 +228,7 @@ var viewPropertyDescriptors = {
             }
           }
 
-          _this2.removeChild(placeholder);
+          placeholder.parentNode.removeChild(placeholder);
 
           if (_promises2.length !== 0) {
             return Promise.all(_promises2);
@@ -252,14 +250,15 @@ var viewPropertyDescriptors = {
         }
 
         if (childElement instanceof HTMLElement || childElement instanceof Text) {
-          _this2.insertBefore(childElement, placeholder);
+          placeholder.parentNode.insertBefore(childElement, placeholder);
         }
 
-        _this2.removeChild(placeholder);
+        placeholder.parentNode.removeChild(placeholder);
       }; // Insert child elements to the view.
 
 
-      var result = doRenderChildElements(this.__childElements, null);
+      var result = doRenderChildElements(this.__childElements, docFragment.appendChild(document.createTextNode(' ')));
+      this.appendChild(docFragment);
 
       var complete = function complete() {
         // A common function to finalize and call the callbacks argument.

@@ -21,7 +21,7 @@ var collectionPropertyDescriptors = {
   length: {
     get: function get() {
       if (this.__collectionData) {
-        return this.__collectionData;
+        return this.__collectionData.length;
       }
 
       return 0;
