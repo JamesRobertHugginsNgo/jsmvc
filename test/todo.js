@@ -18,9 +18,9 @@ viewFactory.todo = (collection) => {
     viewFactory.div({}, [
       () => {
         if (collection.length > 0) {
-          return viewFactory.ul({ 'class': 'list-group', 'data': { 'data-test': true } }, collection.map((model, index) => {
+          return viewFactory.ul({ 'class': 'list-group' }, collection.map((model, index) => {
             return viewFactory.li({
-              'class': ['list-group-item', 'd-flex', 'justify-content-between', 'align-items-center']
+              'class': ['list-group-item', 'd-flex', 'justify-content-between', 'align-items-center'].join(' ')
             }, [
               viewFactory.span({}, [
                 viewFactory.input({ 'type': 'checkbox' }, [], []),
@@ -28,14 +28,10 @@ viewFactory.todo = (collection) => {
                 model.entry
               ], []),
               viewFactory.span({}, [
-                viewFactory.button({ 'class': ['btn', 'btn-danger'], 'type': 'button' }, [
+                viewFactory.button({ 'class': ['btn', 'btn-danger'].join(' '), 'type': 'button' }, [
                   'Remove'
                 ], [
-                  (element) => {
-                    element.addHandler('click', () => {
-                      collection.splice(index, 1);
-                    });
-                  }
+                  (element) => element.addHandler('click', () => collection.splice(index, 1))
                 ])
               ], [])
             ], []);
@@ -44,10 +40,7 @@ viewFactory.todo = (collection) => {
       }
     ], [
       (element) => {
-        collection.addHandler('change', () => {
-          console.log('COLLECTION CHANGED');
-          element.render();
-        });
+        collection.addHandler('change', () => element.render());
       }
     ])
   ], []);
