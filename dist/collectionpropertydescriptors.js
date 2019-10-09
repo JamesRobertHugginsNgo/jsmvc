@@ -1,5 +1,15 @@
 "use strict";
 
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread(); }
+
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance"); }
+
+function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter); }
+
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
+
+/* global eventfulPropertyDescriptors */
+
 /* exported collectionPropertyDescriptors */
 var collectionPropertyDescriptors = {
   definedByCollectionPropertyDescriptors: {
@@ -10,7 +20,11 @@ var collectionPropertyDescriptors = {
   },
   length: {
     get: function get() {
-      return this.__collectionData ? this.__collectionData.length : 0;
+      if (this.__collectionData) {
+        return this.__collectionData.length;
+      }
+
+      return 0;
     }
   },
   finalizeData: {
@@ -24,19 +38,28 @@ var collectionPropertyDescriptors = {
             Object.defineProperty(_this, key, {
               configurable: true,
               enumerable: true,
-              get: function get() {
-                return this.__collectionData[key];
-              },
               set: function set(value) {
+                var _this2 = this;
+
                 if (this.__collectionData[key] !== value) {
                   var oldValue = this.__collectionData[key];
-                  this.__collectionData[key] = value;
+                  this.itemSetter.call(this, value, function () {
+                    _this2.__collectionData[key] = value;
 
-                  if (this.definedByEventfulPropertyDescriptors) {
-                    this.trigger('change', key, value, oldValue);
-                    this.trigger("change:".concat(key), value, oldValue);
-                  }
+                    if (_this2.definedByEventfulPropertyDescriptors) {
+                      _this2.trigger('change', key, value, oldValue);
+
+                      _this2.trigger("change:".concat(key), value, oldValue);
+                    }
+                  });
                 }
+              },
+              get: function get() {
+                var _this3 = this;
+
+                return this.itemGetter(function () {
+                  return _this3.__collectionData[key];
+                });
               }
             });
             startingLength++;
@@ -46,6 +69,16 @@ var collectionPropertyDescriptors = {
           startingLength--;
         }
       }
+    }
+  },
+  itemSetter: {
+    value: function value(_value, basicSetter) {
+      basicSetter();
+    }
+  },
+  itemGetter: {
+    value: function value(basicGetter) {
+      return basicGetter();
     }
   },
   toArray: {
@@ -72,7 +105,11 @@ var collectionPropertyDescriptors = {
       var returnValue = (_Array$prototype$meth = Array.prototype[method]).call.apply(_Array$prototype$meth, [this.__collectionData].concat(args));
 
       this.finalizeData(startingLength);
-      this.trigger('change');
+
+      if (this.definedByEventfulPropertyDescriptors) {
+        this.triggerHandlers('change');
+      }
+
       return returnValue;
     }
   };
@@ -94,3 +131,20 @@ var collectionPropertyDescriptors = {
     }
   };
 });
+/* exported collectionFactory */
+
+function collectionFactory() {
+  var arr = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+  var obj = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+  if (!obj.definedByEventfulPropertyDescriptors) {
+    Object.defineProperties(obj, eventfulPropertyDescriptors);
+  }
+
+  if (!obj.definedByCollectionPropertyDescriptors) {
+    Object.defineProperties(obj, collectionPropertyDescriptors);
+  }
+
+  obj.push.apply(obj, _toConsumableArray(arr));
+  return obj;
+}

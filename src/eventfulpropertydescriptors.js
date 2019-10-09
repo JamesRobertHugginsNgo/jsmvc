@@ -4,41 +4,105 @@ const eventfulPropertyDescriptors = {
     value: true
   },
 
-  __eventData: {
+  __handlerData: {
     writable: true
   },
 
-  __eventReferences: {
+  __handlerReferences: {
     writable: true
+  },
+
+  addHandler: {
+    value(name, handler, once = false, owner = this, enabled = true) {
+      const handlerData = { handler, once, owner, enabled };
+
+      if (this.addEventListener) {
+        const eventListener = (...args) => {
+          if (handlerData.enabled) {
+            handler(...args);
+            if (handlerData.once) {
+              this.removeHandlers(handlerData.name, handlerData.handler, handlerData.once, handlerData.owner, null,
+                { calledFromEventListener: true });
+            }
+          }
+        };
+        this.addEventListener(name, eventListener, { once });
+
+        handlerData.listener = eventListener;
+      }
+
+      if (!this.__handlerData) {
+        this.__handlerData = {};
+      }
+      if (!this.__handlerData[name]) {
+        this.__handlerData[name] = [];
+      }
+      this.__handlerData[name].push(handlerData);
+
+      if (owner && owner !== this && owner.definedByEventfulPropertyDescriptors) {
+        if (!owner.__handlerReferences) {
+          owner.__handlerReferences = {};
+        }
+        if (!owner.__handlerReferences[name]) {
+          owner.__handlerReferences[name] = [];
+        }
+        owner.__handlerReferences[name].push({ emitter: this, handlerData });
+      }
+
+      return this;
+    }
   },
 
   on: {
-    value(name, handler, once = false, context = this) {
-      const eventData = { name, handler, once, context };
+    value(...args) {
+      return this.addHandler(...args);
+    }
+  },
 
-      if (this.addEventListener) {
-        eventData.listener = once
-          ? (...args) => {
-            handler(...args);
-            this.off(name, handler, once, context, { calledFromListener: true });
+  removeHandlers: {
+    value(name, handler, once, owner, enabled, options = {}) {
+      if (!this.__handlerData) {
+        return this;
+      }
+
+      for (const key in this.__handlerData) {
+        if (name == null || name === key) {
+          let index = 0;
+          while (index < this.__handlerData[key].length) {
+            const handlerData = this.__handlerData[key][index];
+            if ((handler == null || handler === handlerData.handler)
+              && (once == null || once === handlerData.once)
+              && (owner == null || owner === handlerData.owner)
+              && (enabled == null || enabled === handlerData.enabled)) {
+
+              if (this.removeEventListener && !options.calledFromEventListener) {
+                this.removeEventListener(key, handlerData.listener);
+              }
+
+              this.__handlerData[key].splice(index, 1);
+
+              if (owner && owner !== this && owner.definedByEventfulPropertyDescriptors && owner.__handlerReferences
+                && owner.__handlerReferences[key] && !options.calledFromCleanUpHandlers) {
+
+                let index2 = 0;
+                while (index2 > owner.__handlerReferences[key].length) {
+                  const handlerReferences = owner.__handlerReferences[key][index2];
+                  if (handlerReferences.emitter === this && handlerReferences.handlerData === handlerData) {
+                    owner.__handlerReferences.splice(index2, 1);
+                  } else {
+                    index2++;
+                  }
+                }
+              }
+            } else {
+              index++;
+            }
           }
-          : handler;
-        this.addEventListener(name, eventData.listener, { once });
-      }
 
-      if (!this.__eventData) {
-        this.__eventData = [];
-      }
-      this.__eventData.push(eventData);
-
-      if (context && context !== this && context.definedByEventfulPropertyDescriptors) {
-        if (!context.__eventReferences) {
-          context.__eventReferences = [];
+          if (name != null) {
+            break;
+          }
         }
-        context.__eventReferences.push({
-          emitter: this,
-          eventData
-        });
       }
 
       return this;
@@ -46,79 +110,97 @@ const eventfulPropertyDescriptors = {
   },
 
   off: {
-    value(name, handler, once, context, options = {}) {
-      if (!this.__eventData) {
+    value(...args) {
+      return this.removeHandlers(...args);
+    }
+  },
+
+  enableHandlers: {
+    value(name, handler, once, owner, enabled) {
+      if (!this.__handlerData) {
         return this;
       }
 
-      let index = 0;
-      while (index < this.__eventData.length) {
-        const eventData = this.__eventData[index];
-        if ((name == null || name === eventData.name)
-          && (handler == null || handler === eventData.handler)
-          && (once == null || once === eventData.once)
-          && (context == null || context === eventData.context)) {
+      for (const key in this.__handlerData) {
+        if (name == null || name === key) {
+          this.__handlerData[key].forEach((handlerData, index) => {
+            if ((handler == null || handler === handlerData.handler)
+              && (once == null || once === handlerData.once)
+              && (owner == null || owner === handlerData.owner)
+              && (enabled == null || enabled === handlerData.enabled)) {
 
-          if (this.removeEventListener && !options.calledFromListener) {
-            this.removeEventListener(eventData.name, eventData.listener);
-          }
-
-          this.__eventData.splice(index, 1);
-
-          if (context && context !== this && context.definedByEventfulPropertyDescriptors && context.__eventReferences) {
-            let index2 = 0
-            while (index2 > context.__eventReferences.length) {
-              const eventReference = context.__eventReferences[index2];
-              if (eventReference.emitter === this && eventReference.eventData === eventData) {
-                context.__eventReferences.splice(index2, 1);
-              } else {
-                index2++;
-              }
+              this.__handlerData[key][index].enabled = true;
             }
-          }
-
-        } else {
-          index++;
+          });
         }
       }
+
+      return this;
+    }
+  },
+
+  disableHandlers: {
+    value(name, handler, once, owner, enabled) {
+      if (!this.__handlerData) {
+        return this;
+      }
+
+      for (const key in this.__handlerData) {
+        if (name == null || name === key) {
+          this.__handlerData[key].forEach((handlerData, index) => {
+            if ((handler == null || handler === handlerData.handler)
+              && (once == null || once === handlerData.once)
+              && (owner == null || owner === handlerData.owner)
+              && (enabled == null || enabled === handlerData.enabled)) {
+
+              this.__handlerData[key][index].enabled = false;
+            }
+          });
+        }
+      }
+
+      return this;
+    }
+  },
+
+  triggerHandlers: {
+    value(name, ...args) {
+      if (!this.__handlerData || !this.__handlerData[name]) {
+        return this;
+      }
+
+      this.__handlerData[name].forEach((handlerData) => {
+        if (handlerData.enabled) {
+          handlerData.handler.call(handlerData.context, ...args);
+        }
+      });
+
+      this.removeHandlers(name, null, true, null, true);
 
       return this;
     }
   },
 
   trigger: {
-    value(name, ...args) {
-      if (!this.__eventData) {
-        return this;
-      }
-      
-      this.__eventData.forEach((eventData) => {
-        if (name === eventData.name) {
-          eventData.handler.call(eventData.context, ...args);
-        }
-      });
-
-      this.off(name, null, true, null);
-
-      return this;
+    value(...args) {
+      return this.triggerHandlers(...args);
     }
   },
 
-  removeEventReferences: {
-    value(emitter, eventData) {
-      if (!this.__eventReferences) {
+  cleanUpHandlers: {
+    value() {
+      this.removeHandlers();
+
+      if (!this.__handlerReferences) {
         return this;
       }
 
-      const eventReferences = Array.from(this.__eventReferences);
-      eventReferences.forEach((eventReference) => {
-        if ((emitter == null || emitter === eventReference.emitter)
-          && (eventData == null || eventData === eventReference.eventData)) {
-
-          const { name, handler, once, context } = eventReference.eventData;
-          eventReference.emitter.off(name, handler, once, context);
-        }
-      });
+      for (const key in this.__handlerReferences) {
+        this.__handlerReferences[key].forEach((handlerReference) => {
+          const { handler, once } = handlerReference.eventData;
+          handlerReference.emitter.removeHandlers(key, handler, once, this, null, { calledFromCleanUpHandlers: true });
+        });
+      }
 
       return this;
     }
