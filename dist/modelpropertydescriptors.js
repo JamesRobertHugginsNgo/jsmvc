@@ -15,7 +15,7 @@ var modelPropertyDescriptors = {
       var _value = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this[name];
 
       var setter = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : function (value, basicSetter) {
-        basicSetter();
+        return basicSetter();
       };
       var getter = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : function (basicGetter) {
         return basicGetter();

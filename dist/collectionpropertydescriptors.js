@@ -20,7 +20,11 @@ var collectionPropertyDescriptors = {
   },
   length: {
     get: function get() {
-      return this.__collectionData ? this.__collectionData.length : 0;
+      if (this.__collectionData) {
+        return this.__collectionData;
+      }
+
+      return 0;
     }
   },
   finalizeData: {
@@ -132,7 +136,6 @@ var collectionPropertyDescriptors = {
 function collectionFactory() {
   var arr = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
   var obj = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-  console.log('COLLECTION FACTORY');
 
   if (!obj.definedByEventfulPropertyDescriptors) {
     Object.defineProperties(obj, eventfulPropertyDescriptors);

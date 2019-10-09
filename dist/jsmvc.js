@@ -22,7 +22,11 @@ var collectionPropertyDescriptors = {
   },
   length: {
     get: function get() {
-      return this.__collectionData ? this.__collectionData.length : 0;
+      if (this.__collectionData) {
+        return this.__collectionData;
+      }
+
+      return 0;
     }
   },
   finalizeData: {
@@ -134,7 +138,6 @@ var collectionPropertyDescriptors = {
 function collectionFactory() {
   var arr = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
   var obj = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-  console.log('COLLECTION FACTORY');
 
   if (!obj.definedByEventfulPropertyDescriptors) {
     Object.defineProperties(obj, eventfulPropertyDescriptors);
@@ -402,7 +405,7 @@ var modelPropertyDescriptors = {
       var _value2 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this[name];
 
       var setter = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : function (value, basicSetter) {
-        basicSetter();
+        return basicSetter();
       };
       var getter = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : function (basicGetter) {
         return basicGetter();
@@ -498,30 +501,20 @@ var viewPropertyDescriptors = {
   __attributes: {
     writable: true
   },
-  setAttributes: {
+  defineAttributes: {
     value: function value(attributes) {
       this.__attributes = attributes;
       return this;
     }
   },
-  __childElements: {
+  renderAttributesPromise: {
     writable: true
   },
-  setChildElements: {
-    value: function value(childElements) {
-      this.__childElements = childElements;
-      return this;
-    }
-  },
-  promise: {
-    writable: true
-  },
-  render: {
-    value: function value(callBacks) {
+  renderAttributes: {
+    value: function value(callbacks) {
       var _this10 = this;
 
-      var calledFromFactory = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-
+      // Remove attributes from the view before inserting attributes back.
       if (this.hasAttributes()) {
         var attributeKeys = [];
 
@@ -530,154 +523,371 @@ var viewPropertyDescriptors = {
         }
 
         attributeKeys.forEach(function (key) {
-          _this10.removeAttribute(key);
+          return _this10.removeAttribute(key);
         });
+      } // Recursive function use to insert attributes to the view.
+      // Recursion is used to handle values that is not a number type or a string type.
+      // Returns either undefine or a promise.
+
+
+      var doRenderAttributes = function doRenderAttributes(value, key) {
+        if (typeof value === 'function') {
+          return doRenderAttributes(value(), key);
+        }
+
+        if (_typeof(value) === 'object') {
+          if (value === null) {
+            return;
+          }
+
+          if (value instanceof Promise) {
+            return value.then(function (finalValue) {
+              return doRenderAttributes(finalValue, key);
+            });
+          }
+
+          if (Array.isArray(value)) {
+            var _promises = [];
+            value.forEach(function (item) {
+              var result = doRenderAttributes(item, key);
+
+              if (result instanceof Promise) {
+                _promises.push(result);
+              }
+            });
+
+            if (_promises.length !== 0) {
+              return Promise.all(_promises);
+            } else {
+              return;
+            }
+          }
+
+          var promises = [];
+
+          for (var newKey in value) {
+            var _result = doRenderAttributes(value[newKey], newKey);
+
+            if (_result instanceof Promise) {
+              promises.push(_result);
+            }
+          }
+
+          if (promises.length !== 0) {
+            return Promise.all(promises);
+          } else {
+            return;
+          }
+        }
+
+        if (typeof value === 'boolean') {
+          if (value) {
+            return doRenderAttributes('', key);
+          }
+        }
+
+        if (value !== undefined && key) {
+          _this10.setAttribute(key, String(value));
+        }
+      }; // Insert attributes to the view.
+
+
+      var result = doRenderAttributes(this.__attributes, null); // A common function to finalize and call the callbacks argument.
+      // Returns either undefined or a promise.
+
+      var doCallbacks = function doCallbacks() {
+        if (!callbacks) {
+          return;
+        }
+
+        if (!Array.isArray(callbacks)) {
+          callbacks = [callbacks];
+        }
+
+        var promises = [];
+        callbacks.forEach(function (callback) {
+          var result = callback(_this10);
+
+          if (result instanceof Promise) {
+            promises.push(result);
+          }
+        });
+
+        if (promises.length !== 0) {
+          return Promise.all(promises);
+        }
+      }; // Call callbacks and set promise.
+      // The following allows the callback to be called right away when result isnt a Promise.
+      // With Promise.resolve().then(...), the callback would always have to wait.
+
+
+      if (result instanceof Promise) {
+        this.renderAttributesPromise = result.then(function () {
+          return doCallbacks();
+        }).then(function () {
+          return _this10;
+        });
+      } else {
+        var result2 = doCallbacks();
+
+        if (result2 instanceof Promise) {
+          this.renderAttributesPromise = result2.then(function () {
+            return _this10;
+          });
+        } else {
+          this.renderAttributesPromise = Promise.resolve(this);
+        }
       }
+
+      return this;
+    }
+  },
+  __childElements: {
+    writable: true
+  },
+  defineChildElements: {
+    value: function value(childElements) {
+      this.__childElements = childElements;
+      return this;
+    }
+  },
+  renderChildElementsPromise: {
+    writable: true
+  },
+  renderChildElements: {
+    value: function value(callbacks) {
+      var _this11 = this;
+
+      var reRenderChildElement = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
 
       while (this.firstChild) {
         this.removeChild(this.firstChild);
       }
 
-      var renderAttributes = function renderAttributes(value, key) {
-        if (value == null || value === false) {
-          return value;
+      var doRenderChildElements = function doRenderChildElements(childElement, placeholder) {
+        if (!placeholder) {
+          placeholder = _this11.appendChild(document.createTextNode(' '));
         }
 
-        if (value instanceof Promise) {
-          return value.then(function (finalValue) {
-            return renderAttributes(finalValue, key);
-          });
+        if (typeof childElement === 'function') {
+          return doRenderChildElements(childElement(), placeholder);
         }
 
-        if (Array.isArray(value)) {
-          var promises = [];
-          value.forEach(function (item, index) {
-            value[index] = renderAttributes(item);
+        if (_typeof(childElement) === 'object' && !(childElement instanceof HTMLElement || childElement instanceof Text)) {
+          if (childElement === null) {
+            _this11.removeChild(placeholder);
 
-            if (value[index] instanceof Promise) {
-              promises.push(value[index].then(function (finalItem) {
-                value[index] = finalItem;
-              }));
-            }
-          });
+            return;
+          }
 
-          if (promises.length > 0) {
-            return Promise.all(promises).then(function () {
-              return renderAttributes(value.join(' '), key);
+          if (childElement instanceof Promise) {
+            return childElement.then(function (finalChildElements) {
+              return doRenderChildElements(finalChildElements, placeholder);
             });
           }
 
-          return renderAttributes(value.join(' '), key);
-        }
+          if (Array.isArray(childElement)) {
+            var _promises3 = [];
+            childElement.forEach(function (item) {
+              var newPlaceholder = _this11.insertBefore(document.createTextNode(' '), placeholder);
 
-        if (_typeof(value) === 'object') {
-          var _promises = [];
+              var result = doRenderChildElements(item, newPlaceholder);
 
-          for (var _key4 in value) {
-            _promises.push(renderAttributes(value[_key4], _key4));
+              if (result instanceof Promise) {
+                _promises3.push(result);
+              }
+            });
+
+            _this11.removeChild(placeholder);
+
+            if (_promises3.length !== 0) {
+              return Promise.all(_promises3);
+            } else {
+              return;
+            }
           }
 
-          return Promise.all(_promises);
-        }
+          var _promises2 = [];
 
-        if (typeof value === 'function') {
-          return renderAttributes(value(), key);
-        }
+          for (var key in childElement) {
+            var newPlaceholder = _this11.insertBefore(document.createTextNode(' '), placeholder);
 
-        if (typeof value === 'boolean') {
-          renderAttributes('', key);
-          return value;
-        }
+            var _result2 = doRenderChildElements(childElement[key], newPlaceholder);
 
-        if (key) {
-          _this10.setAttribute(key, value);
-        }
-
-        return value;
-      };
-
-      var renderChildElement = function renderChildElement(childElement, placeHolder) {
-        placeHolder = placeHolder || _this10.appendChild(document.createElement('span'));
-
-        if (Array.isArray(childElement)) {
-          placeHolder.parentNode.removeChild(placeHolder);
-          return renderChildElements(childElement);
-        } else if (typeof childElement === 'function') {
-          return renderChildElement(childElement(_this10), placeHolder);
-        } else if (childElement instanceof Promise) {
-          return childElement.then(function (finalChildElement) {
-            return renderChildElement(finalChildElement, placeHolder);
-          });
-        }
-
-        var returnValue;
-
-        if (childElement instanceof HTMLElement || childElement instanceof Text) {
-          placeHolder.parentNode.insertBefore(childElement, placeHolder);
-
-          if (childElement.definedByViewPropertyDescriptors) {
-            returnValue = childElement.promise;
+            if (_result2 instanceof Promise) {
+              _promises2.push(_result2);
+            }
           }
-        } else if (typeof childElement === 'string') {
+
+          _this11.removeChild(placeholder);
+
+          if (_promises2.length !== 0) {
+            return Promise.all(_promises2);
+          } else {
+            return;
+          }
+        }
+
+        if (typeof childElement === 'string') {
           var tempElement = document.createElement('div');
           tempElement.innerHTML = childElement;
+          var newChildElements = [];
 
-          while (tempElement.firstChild) {
-            placeHolder.parentNode.insertBefore(tempElement.firstChild, placeHolder);
+          for (var index = 0, length = tempElement.childNodes.length; index < length; index++) {
+            newChildElements.push(tempElement.childNodes[index]);
           }
+
+          return doRenderChildElements(newChildElements, placeholder);
         }
 
-        placeHolder.parentNode.removeChild(placeHolder);
-        return returnValue;
-      };
-
-      var renderChildElements = function renderChildElements(childElements) {
-        if (typeof childElements === 'function') {
-          return renderChildElements(childElements(_this10));
-        } else if (childElements instanceof Promise) {
-          return childElements.then(function (finalChildElements) {
-            return renderChildElements(finalChildElements);
-          });
-        } else if (childElements instanceof HTMLElement) {
-          return renderChildElement(childElements);
-        } else if (Array.isArray(childElements)) {
-          return Promise.all(childElements.map(function (childElement) {
-            return renderChildElement(childElement);
-          }));
-        } else if (childElements != null) {
-          return renderChildElements([childElements]);
+        if (childElement instanceof HTMLElement || childElement instanceof Text) {
+          _this11.insertBefore(childElement, placeholder);
         }
-      };
 
-      this.promise = Promise.all([renderAttributes(this.__attributes), renderChildElements(this.__childElements)]).then(function () {
-        var promises = [];
+        _this11.removeChild(placeholder);
+      }; // Insert child elements to the view.
 
-        if (!calledFromFactory && _this10.__childElements && Array.isArray(_this10.__childElements)) {
-          _this10.__childElements.forEach(function (childElement) {
-            if (childElement.definedByViewPropertyDescriptors) {
-              promises.push(childElement.render().promise);
+
+      var result = doRenderChildElements(this.__childElements, null);
+
+      var complete = function complete() {
+        // A common function to finalize and call the callbacks argument.
+        // Returns either undefined or a promise.
+        var doCallbacks = function doCallbacks() {
+          if (!callbacks) {
+            return;
+          }
+
+          if (!Array.isArray(callbacks)) {
+            callbacks = [callbacks];
+          }
+
+          var promises = [];
+          callbacks.forEach(function (callback) {
+            var result = callback(_this11);
+
+            if (result instanceof Promise) {
+              promises.push(result);
             }
           });
+
+          if (promises.length !== 0) {
+            return Promise.all(promises);
+          }
+        }; // Call callbacks and set promise.
+        // The following allows the callback to be called right away when result isnt a Promise.
+        // With Promise.resolve().then(...), the callback would always have to wait.
+
+
+        if (result instanceof Promise) {
+          return result.then(function () {
+            return doCallbacks();
+          });
+        } else {
+          return doCallbacks();
+        }
+      };
+
+      var promises = [];
+
+      if (reRenderChildElement) {
+        this.__childElements.forEach(function (childElement) {
+          if (childElement.definedByViewPropertyDescriptors) {
+            promises.push(childElement.render().renderPromise);
+          }
+        });
+      }
+
+      if (promises.length !== 0) {
+        this.renderChildElementsPromise = Promise.all(promises).then(function () {
+          return complete();
+        }).then(function () {
+          return _this11;
+        });
+      } else {
+        var result2 = complete();
+
+        if (result2 instanceof Promise) {
+          this.renderChildElementsPromise = result2.then(function () {
+            return _this11;
+          });
+        } else {
+          this.renderChildElementsPromise = Promise.resolve(this);
+        }
+      }
+
+      return this;
+    }
+  },
+  renderPromise: {
+    writable: true
+  },
+  render: {
+    value: function value(callbacks) {
+      var _this12 = this;
+
+      var reRenderChildElement = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+
+      // A common function to finalize and call the callbacks argument.
+      // Returns either undefined or a promise.
+      var doCallbacks = function doCallbacks() {
+        if (!callbacks) {
+          return;
         }
 
-        return Promise.all(promises);
-      }).then(function () {
-        if (callBacks) {
-          callBacks = Array.isArray(callBacks) ? callBacks : [callBacks];
-          return Promise.all(callBacks.map(function (callBack) {
-            return callBack(_this10);
-          }));
+        if (!Array.isArray(callbacks)) {
+          callbacks = [callbacks];
         }
-      }).then(function () {
-        return _this10;
-      });
+
+        var promises = [];
+        callbacks.forEach(function (callback) {
+          var result = callback(_this12);
+
+          if (result instanceof Promise) {
+            promises.push(result);
+          }
+        });
+
+        if (promises.length !== 0) {
+          return Promise.all(promises);
+        }
+      };
+
+      var promises = [];
+
+      if (this.__attributes) {
+        promises.push(this.renderAttributes().renderAttributesPromise);
+      }
+
+      if (this.__childElements) {
+        promises.push(this.renderChildElements(null, reRenderChildElement).renderChildElementsPromise);
+      }
+
+      if (promises.length !== 0) {
+        this.renderPromise = Promise.all(promises).then(function () {
+          return doCallbacks();
+        }).then(function () {
+          return _this12;
+        });
+      } else {
+        var result2 = doCallbacks();
+
+        if (result2 instanceof Promise) {
+          this.renderPromise = result2.then(function () {
+            return _this12;
+          });
+        } else {
+          this.renderPromise = Promise.resolve(this);
+        }
+      }
+
       return this;
     }
   }
 };
 /* exported viewFactory */
 
-function viewFactory(element, attributes, childElements, callBacks) {
+function viewFactory(element, attributes, childElements, callbacks) {
   if (typeof element === 'string') {
     element = document.createElement(element);
   }
@@ -736,13 +946,13 @@ function viewFactory(element, attributes, childElements, callBacks) {
     Object.defineProperties(element, viewPropertyDescriptors);
   }
 
-  return element.setAttributes(attributes).setChildElements(childElements).render(callBacks, true);
+  return element.defineAttributes(attributes).defineChildElements(childElements).render(callbacks, false);
 }
 
 ['a', 'abbr', 'acronym', 'address', 'applet', 'area', 'article', 'aside', 'audio', 'b', 'base', 'basefont', 'bdi', 'bdo', 'big', 'blockquote', 'body', 'br', 'button', 'canvas', 'caption', 'center', 'cite', 'code', 'col', 'colgroup', 'datalist', 'dd', 'del', 'details', 'dfn', 'dialog', 'dir', 'div', 'dl', 'dt', 'em', 'embed', 'fieldset', 'figcaption', 'figure', 'font', 'footer', 'form', 'frame', 'frameset', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'head', 'header', 'hr', 'viewFactoryl', 'i', 'iframe', 'img', 'input', 'ins', 'kbd', 'keygen', 'label', 'legend', 'li', 'link', 'main', 'map', 'mark', 'menu', 'menuitem', 'meta', 'meter', 'nav', 'noframes', 'noscript', 'object', 'ol', 'optgroup', 'option', 'output', 'p', 'param', 'picture', 'pre', 'progress', 'q', 'rp', 'rt', 'ruby', 's', 'samp', 'script', 'section', 'select', 'small', 'source', 'span', 'strike', 'strong', 'style', 'sub', 'summary', 'sup', 'table', 'tbody', 'td', 'textarea', 'tfoot', 'th', 'thead', 'time', 'title', 'tr', 'track', 'tt', 'u', 'ul', 'var', 'video', 'wbr'].forEach(function (element) {
   viewFactory[element] = function () {
-    for (var _len4 = arguments.length, args = new Array(_len4), _key5 = 0; _key5 < _len4; _key5++) {
-      args[_key5] = arguments[_key5];
+    for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+      args[_key4] = arguments[_key4];
     }
 
     return viewFactory.apply(void 0, [element].concat(args));

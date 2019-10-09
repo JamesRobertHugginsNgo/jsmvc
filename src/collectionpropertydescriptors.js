@@ -12,7 +12,11 @@ const collectionPropertyDescriptors = {
 
   length: {
     get() {
-      return this.__collectionData ? this.__collectionData.length : 0;
+      if (this.__collectionData) {
+        return this.__collectionData;
+      }
+      
+      return 0;
     }
   },
 
@@ -38,9 +42,7 @@ const collectionPropertyDescriptors = {
               }
             },
             get() {
-              return this.itemGetter(() => {
-                return this.__collectionData[key];
-              });
+              return this.itemGetter(() => this.__collectionData[key]);
             }
           });
 
@@ -108,8 +110,6 @@ const collectionPropertyDescriptors = {
 
 /* exported collectionFactory */
 function collectionFactory(arr = [], obj = {}) {
-  console.log('COLLECTION FACTORY');
-
   if (!obj.definedByEventfulPropertyDescriptors) {
     Object.defineProperties(obj, eventfulPropertyDescriptors);
   }

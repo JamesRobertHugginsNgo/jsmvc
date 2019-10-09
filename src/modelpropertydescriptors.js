@@ -11,8 +11,8 @@ const modelPropertyDescriptors = {
   },
 
   setProperty: {
-    value(name, value = this[name], setter = (value, basicSetter) => { basicSetter(); },
-      getter = (basicGetter) => { return basicGetter(); }) {
+    value(name, value = this[name], setter = (value, basicSetter) => basicSetter(),
+      getter = (basicGetter) => basicGetter()) {
 
       if (!this.__propertyData) {
         this.__propertyData = {};
@@ -40,9 +40,7 @@ const modelPropertyDescriptors = {
           }
         },
         get() {
-          return getter.call(this, () => {
-            return this.__propertyData[name];
-          });
+          return getter.call(this, () => this.__propertyData[name]);
         }
       });
     }
