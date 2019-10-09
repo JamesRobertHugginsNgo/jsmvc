@@ -161,10 +161,12 @@ const viewPropertyDescriptors = {
         this.removeChild(this.firstChild);
       }
 
+      const docFragment = document.createDocumentFragment();
+
       const doRenderChildElements = (childElement, placeholder) => {
-        if (!placeholder) {
-          placeholder = this.appendChild(document.createTextNode(' '));
-        }
+        // if (!placeholder) {
+        //   placeholder = this.appendChild(document.createTextNode(' '));
+        // }
 
         if (typeof childElement === 'function') {
           return doRenderChildElements(childElement(), placeholder);
@@ -172,7 +174,7 @@ const viewPropertyDescriptors = {
 
         if (typeof childElement === 'object' && !(childElement instanceof HTMLElement || childElement instanceof Text)) {
           if (childElement === null) {
-            this.removeChild(placeholder);
+            placeholder.parentNode.removeChild(placeholder);
             return;
           }
 
@@ -184,14 +186,14 @@ const viewPropertyDescriptors = {
             const promises = [];
 
             childElement.forEach((item) => {
-              const newPlaceholder = this.insertBefore(document.createTextNode(' '), placeholder);
+              const newPlaceholder = placeholder.parentNode.insertBefore(document.createTextNode(' '), placeholder);
               const result = doRenderChildElements(item, newPlaceholder);
               if (result instanceof Promise) {
                 promises.push(result);
               }
             });
 
-            this.removeChild(placeholder);
+            placeholder.parentNode.removeChild(placeholder);
 
             if (promises.length !== 0) {
               return Promise.all(promises);
@@ -203,14 +205,14 @@ const viewPropertyDescriptors = {
           const promises = [];
 
           for (const key in childElement) {
-            const newPlaceholder = this.insertBefore(document.createTextNode(' '), placeholder);
+            const newPlaceholder = placeholder.parentNode.insertBefore(document.createTextNode(' '), placeholder);
             const result = doRenderChildElements(childElement[key], newPlaceholder);
             if (result instanceof Promise) {
               promises.push(result);
             }
           }
 
-          this.removeChild(placeholder);
+          placeholder.parentNode.removeChild(placeholder);
 
           if (promises.length !== 0) {
             return Promise.all(promises);
@@ -232,14 +234,16 @@ const viewPropertyDescriptors = {
         }
 
         if (childElement instanceof HTMLElement || childElement instanceof Text) {
-          this.insertBefore(childElement, placeholder);
+          placeholder.parentNode.insertBefore(childElement, placeholder);
         }
 
-        this.removeChild(placeholder);
+        placeholder.parentNode.removeChild(placeholder);
       };
 
       // Insert child elements to the view.
-      const result = doRenderChildElements(this.__childElements, null);
+      const result = doRenderChildElements(this.__childElements, docFragment.appendChild(document.createTextNode(' ')));
+
+      this.appendChild(docFragment);
 
       const complete = () => {
 
