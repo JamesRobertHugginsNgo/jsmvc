@@ -20,7 +20,7 @@ var viewPropertyDescriptors = {
   },
   attrs: {
     value: function value() {
-      return this.definedByViewPropertyDescriptors.apply(this, arguments);
+      return this.defineAttributes.apply(this, arguments);
     }
   },
   renderAttributesPromise: {

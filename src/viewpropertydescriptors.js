@@ -19,7 +19,7 @@ const viewPropertyDescriptors = {
 
   attrs: {
     value(...args) {
-      return this.definedByViewPropertyDescriptors(...args);
+      return this.defineAttributes(...args);
     }
   },
 
