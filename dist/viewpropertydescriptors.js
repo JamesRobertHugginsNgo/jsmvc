@@ -300,8 +300,16 @@ var viewPropertyDescriptors = {
 
       var promises = [];
 
-      if (Array.isArray(this.__childElements) && reRenderChildElement) {
-        this.__childElements.forEach(function (childElement) {
+      if (reRenderChildElement) {
+        var childElements = this.__childElements;
+
+        if (Array.isArray(childElements)) {
+          childElements = childElements.slice();
+        } else {
+          childElements = [childElements];
+        }
+
+        childElements.forEach(function (childElement) {
           if (childElement.definedByViewPropertyDescriptors) {
             promises.push(childElement.render().renderPromise);
           }
