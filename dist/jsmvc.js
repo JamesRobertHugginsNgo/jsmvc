@@ -790,7 +790,15 @@ var viewPropertyDescriptors = {
       var promises = [];
 
       if (reRenderChildElement) {
-        this.__childElements.forEach(function (childElement) {
+        var childElements = this.__childElements;
+
+        if (Array.isArray(childElements)) {
+          childElements = childElements.slice();
+        } else {
+          childElements = [childElements];
+        }
+
+        childElements.forEach(function (childElement) {
           if (childElement.definedByViewPropertyDescriptors) {
             promises.push(childElement.render().renderPromise);
           }
