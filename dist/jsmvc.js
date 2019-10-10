@@ -507,6 +507,11 @@ var viewPropertyDescriptors = {
       return this;
     }
   },
+  attrs: {
+    value: function value() {
+      return this.definedByViewPropertyDescriptors.apply(this, arguments);
+    }
+  },
   renderAttributesPromise: {
     writable: true
   },
@@ -649,6 +654,11 @@ var viewPropertyDescriptors = {
     value: function value(childElements) {
       this.__childElements = childElements;
       return this;
+    }
+  },
+  els: {
+    value: function value() {
+      return this.defineChildElements.apply(this, arguments);
     }
   },
   renderChildElementsPromise: {
