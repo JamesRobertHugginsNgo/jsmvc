@@ -284,7 +284,7 @@ const viewPropertyDescriptors = {
 
       const promises = [];
 
-      if (this.__childElements && reRenderChildElement) {
+      if (Array.isArray(this.__childElements) && reRenderChildElement) {
         this.__childElements.forEach((childElement) => {
           if (childElement.definedByViewPropertyDescriptors) {
             promises.push(childElement.render().renderPromise);

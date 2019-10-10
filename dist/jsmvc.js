@@ -789,7 +789,7 @@ var viewPropertyDescriptors = {
 
       var promises = [];
 
-      if (this.__childElements && reRenderChildElement) {
+      if (Array.isArray(this.__childElements) && reRenderChildElement) {
         this.__childElements.forEach(function (childElement) {
           if (childElement.definedByViewPropertyDescriptors) {
             promises.push(childElement.render().renderPromise);
