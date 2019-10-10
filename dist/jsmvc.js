@@ -447,6 +447,7 @@ var modelPropertyDescriptors = {
           });
         }
       });
+      return this;
     }
   },
   unsetProperty: {
@@ -458,6 +459,8 @@ var modelPropertyDescriptors = {
       if (value !== undefined) {
         this[name] = value;
       }
+
+      return this;
     }
   },
   toJSON: {

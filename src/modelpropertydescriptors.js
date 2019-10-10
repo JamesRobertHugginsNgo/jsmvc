@@ -43,6 +43,8 @@ const modelPropertyDescriptors = {
           return getter.call(this, () => this.__propertyData[name]);
         }
       });
+
+      return this;
     }
   },
 
@@ -56,6 +58,8 @@ const modelPropertyDescriptors = {
       if (value !== undefined) {
         this[name] = value;
       }
+
+      return this;
     }
   },
 
