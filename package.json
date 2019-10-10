@@ -1,6 +1,6 @@
 {
   "name": "jsmvc",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "JavaScript Model View Controller",
   "main": "index.js",
   "scripts": {
