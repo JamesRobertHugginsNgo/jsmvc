@@ -15,7 +15,7 @@ const modelPropertyDescriptors = {
       getter = (basicGetter) => basicGetter()) {
 
       const propertyDescriptor = Object.getOwnPropertyDescriptor(this, name);
-      if (!propertyDescriptor.get && !propertyDescriptor.set) {
+      if (!propertyDescriptor || (!propertyDescriptor.get && !propertyDescriptor.set)) {
         if (!this.__propertyData) {
           this.__propertyData = {};
         }
