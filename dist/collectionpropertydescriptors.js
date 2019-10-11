@@ -87,11 +87,11 @@ var collectionPropertyDescriptors = {
 
       array.forEach(function (value, index) {
         if (value.definedByModelPropertyDescriptors) {
-          array[index] = array[index].toJSON();
+          array[index] = value.toJSON();
         }
 
         if (value.definedByCollectionPropertyDescriptors) {
-          array[index] = array[index].toArray();
+          array[index] = value.toArray();
         }
       });
       return array;
