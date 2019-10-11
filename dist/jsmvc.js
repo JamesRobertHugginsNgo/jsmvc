@@ -739,9 +739,9 @@ var viewPropertyDescriptors = {
           }
         }
 
-        if (typeof childElement === 'string') {
+        if (typeof childElement === 'boolean' || typeof childElement === 'number' || typeof childElement === 'string') {
           var tempElement = document.createElement('div');
-          tempElement.innerHTML = childElement;
+          tempElement.innerHTML = String(childElement);
           var newChildElements = [];
 
           for (var index = 0, length = tempElement.childNodes.length; index < length; index++) {

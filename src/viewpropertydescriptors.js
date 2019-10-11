@@ -233,9 +233,9 @@ const viewPropertyDescriptors = {
           }
         }
 
-        if (typeof childElement === 'string') {
+        if (typeof childElement === 'boolean' || typeof childElement === 'number' || typeof childElement === 'string') {
           const tempElement = document.createElement('div');
-          tempElement.innerHTML = childElement;
+          tempElement.innerHTML = String(childElement);
 
           const newChildElements = [];
           for (let index = 0, length = tempElement.childNodes.length; index < length; index++) {
