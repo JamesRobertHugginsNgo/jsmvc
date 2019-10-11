@@ -85,7 +85,18 @@ var collectionPropertyDescriptors = {
   },
   toArray: {
     value: function value() {
-      return this.__collectionData.slice();
+      var array = this.__collectionData.slice();
+
+      array.forEach(function (value, index) {
+        if (value.definedByModelPropertyDescriptors) {
+          array[index] = array[index].toJSON();
+        }
+
+        if (value.definedByCollectionPropertyDescriptors) {
+          array[index] = array[index].toArray();
+        }
+      });
+      return array;
     }
   }
 };
@@ -477,7 +488,19 @@ var modelPropertyDescriptors = {
   },
   toJSON: {
     value: function value() {
-      return Object.assign({}, this.__propertyData);
+      var json = Object.assign({}, this.__propertyData);
+
+      for (var key in json) {
+        if (json[key].definedByModelPropertyDescriptors) {
+          json[key] = json[key].toJSON();
+        }
+
+        if (json[key].definedByCollectionPropertyDescriptors) {
+          json[key] = json[key].toArray();
+        }
+      }
+
+      return json;
     }
   }
 };

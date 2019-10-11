@@ -79,7 +79,19 @@ var modelPropertyDescriptors = {
   },
   toJSON: {
     value: function value() {
-      return Object.assign({}, this.__propertyData);
+      var json = Object.assign({}, this.__propertyData);
+
+      for (var key in json) {
+        if (json[key].definedByModelPropertyDescriptors) {
+          json[key] = json[key].toJSON();
+        }
+
+        if (json[key].definedByCollectionPropertyDescriptors) {
+          json[key] = json[key].toArray();
+        }
+      }
+
+      return json;
     }
   }
 };

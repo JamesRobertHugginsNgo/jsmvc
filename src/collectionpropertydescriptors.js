@@ -69,7 +69,16 @@ const collectionPropertyDescriptors = {
 
   toArray: {
     value() {
-      return this.__collectionData.slice();
+      const array = this.__collectionData.slice();
+      array.forEach((value, index) => {
+        if (value.definedByModelPropertyDescriptors) {
+          array[index] = array[index].toJSON();
+        }
+        if (value.definedByCollectionPropertyDescriptors) {
+          array[index] = array[index].toArray();
+        }
+      });
+      return array;
     }
   }
 };

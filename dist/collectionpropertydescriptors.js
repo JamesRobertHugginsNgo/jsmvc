@@ -83,7 +83,18 @@ var collectionPropertyDescriptors = {
   },
   toArray: {
     value: function value() {
-      return this.__collectionData.slice();
+      var array = this.__collectionData.slice();
+
+      array.forEach(function (value, index) {
+        if (value.definedByModelPropertyDescriptors) {
+          array[index] = array[index].toJSON();
+        }
+
+        if (value.definedByCollectionPropertyDescriptors) {
+          array[index] = array[index].toArray();
+        }
+      });
+      return array;
     }
   }
 };
