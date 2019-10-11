@@ -43,8 +43,6 @@ var collectionPropertyDescriptors = {
               set: function set(value) {
                 var _this2 = this;
 
-                console.log('SET', this);
-
                 if (this.__collectionData[key] !== value) {
                   var oldValue = this.__collectionData[key];
                   this.itemSetter.call(this, value, function () {
@@ -61,7 +59,6 @@ var collectionPropertyDescriptors = {
               get: function get() {
                 var _this3 = this;
 
-                console.log('GET', this);
                 return this.itemGetter(function () {
                   return _this3.__collectionData[key];
                 });
