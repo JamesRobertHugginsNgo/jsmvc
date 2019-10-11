@@ -110,6 +110,11 @@ const collectionPropertyDescriptors = {
 
 /* exported collectionFactory */
 function collectionFactory(arr = [], obj = {}) {
+  if (!Array.isArray(arr)) {
+    obj = arr;
+    arr = [];
+  }
+
   if (!obj.definedByEventfulPropertyDescriptors) {
     Object.defineProperties(obj, eventfulPropertyDescriptors);
   }

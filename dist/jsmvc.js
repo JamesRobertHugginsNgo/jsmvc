@@ -136,8 +136,15 @@ var collectionPropertyDescriptors = {
 /* exported collectionFactory */
 
 function collectionFactory() {
+  var _obj;
+
   var arr = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
   var obj = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+  if (!Array.isArray(arr)) {
+    obj = arr;
+    arr = [];
+  }
 
   if (!obj.definedByEventfulPropertyDescriptors) {
     Object.defineProperties(obj, eventfulPropertyDescriptors);
@@ -147,7 +154,8 @@ function collectionFactory() {
     Object.defineProperties(obj, collectionPropertyDescriptors);
   }
 
-  obj.push.apply(obj, _toConsumableArray(arr));
+  (_obj = obj).push.apply(_obj, _toConsumableArray(arr));
+
   return obj;
 }
 /* exported eventfulPropertyDescriptors */
