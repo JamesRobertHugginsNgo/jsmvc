@@ -30,6 +30,7 @@ const collectionPropertyDescriptors = {
             configurable: true,
             enumerable: true,
             set(value) {
+              console.log('SET', this);
               if (this.__collectionData[key] !== value) {
                 const oldValue = this.__collectionData[key];
                 this.itemSetter.call(this, value, () => {
@@ -42,6 +43,7 @@ const collectionPropertyDescriptors = {
               }
             },
             get() {
+              console.log('GET', this);
               return this.itemGetter(() => this.__collectionData[key]);
             }
           });
