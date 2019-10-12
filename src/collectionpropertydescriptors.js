@@ -15,7 +15,7 @@ const collectionPropertyDescriptors = {
       if (this.__collectionData) {
         return this.__collectionData.length;
       }
-      
+
       return 0;
     }
   },
@@ -69,7 +69,16 @@ const collectionPropertyDescriptors = {
 
   toArray: {
     value() {
-      return this.__collectionData.slice();
+      const array = this.__collectionData.slice();
+      array.forEach((value, index) => {
+        if (value.definedByModelPropertyDescriptors) {
+          array[index] = value.toJSON();
+        }
+        if (value.definedByCollectionPropertyDescriptors) {
+          array[index] = value.toArray();
+        }
+      });
+      return array;
     }
   }
 };
@@ -110,6 +119,11 @@ const collectionPropertyDescriptors = {
 
 /* exported collectionFactory */
 function collectionFactory(arr = [], obj = {}) {
+  if (!Array.isArray(arr)) {
+    obj = arr;
+    arr = [];
+  }
+
   if (!obj.definedByEventfulPropertyDescriptors) {
     Object.defineProperties(obj, eventfulPropertyDescriptors);
   }

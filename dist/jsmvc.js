@@ -85,7 +85,18 @@ var collectionPropertyDescriptors = {
   },
   toArray: {
     value: function value() {
-      return this.__collectionData.slice();
+      var array = this.__collectionData.slice();
+
+      array.forEach(function (value, index) {
+        if (value.definedByModelPropertyDescriptors) {
+          array[index] = value.toJSON();
+        }
+
+        if (value.definedByCollectionPropertyDescriptors) {
+          array[index] = value.toArray();
+        }
+      });
+      return array;
     }
   }
 };
@@ -136,8 +147,15 @@ var collectionPropertyDescriptors = {
 /* exported collectionFactory */
 
 function collectionFactory() {
+  var _obj;
+
   var arr = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
   var obj = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+  if (!Array.isArray(arr)) {
+    obj = arr;
+    arr = [];
+  }
 
   if (!obj.definedByEventfulPropertyDescriptors) {
     Object.defineProperties(obj, eventfulPropertyDescriptors);
@@ -147,7 +165,8 @@ function collectionFactory() {
     Object.defineProperties(obj, collectionPropertyDescriptors);
   }
 
-  obj.push.apply(obj, _toConsumableArray(arr));
+  (_obj = obj).push.apply(_obj, _toConsumableArray(arr));
+
   return obj;
 }
 /* exported eventfulPropertyDescriptors */
@@ -410,43 +429,48 @@ var modelPropertyDescriptors = {
       var getter = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : function (basicGetter) {
         return basicGetter();
       };
+      var propertyDescriptor = Object.getOwnPropertyDescriptor(this, name);
 
-      if (!this.__propertyData) {
-        this.__propertyData = {};
-      }
+      if (!propertyDescriptor || !propertyDescriptor.get && !propertyDescriptor.set) {
+        if (!this.__propertyData) {
+          this.__propertyData = {};
+        }
 
-      if (_value2 !== undefined) {
-        this.__propertyData[name] = _value2;
-      }
+        if (_value2 !== undefined) {
+          this.__propertyData[name] = _value2;
+        }
 
-      delete this[name];
-      Object.defineProperty(this, name, {
-        configurable: true,
-        enumerable: true,
-        set: function set(value) {
-          var _this8 = this;
+        delete this[name];
+        Object.defineProperty(this, name, {
+          configurable: true,
+          enumerable: true,
+          set: function set(value) {
+            var _this8 = this;
 
-          if (this.__propertyData[name] !== value) {
-            var oldValue = this.__propertyData[name];
-            setter.call(this, value, function () {
-              if (_this8.definedByEventfulPropertyDescriptors) {
-                _this8.__propertyData[name] = value;
+            if (this.__propertyData[name] !== value) {
+              var oldValue = this.__propertyData[name];
+              setter.call(this, value, function () {
+                if (_this8.definedByEventfulPropertyDescriptors) {
+                  _this8.__propertyData[name] = value;
 
-                _this8.trigger('change', name, value, oldValue);
+                  _this8.trigger('change', name, value, oldValue);
 
-                _this8.trigger("change:".concat(name), value, oldValue);
-              }
+                  _this8.trigger("change:".concat(name), value, oldValue);
+                }
+              });
+            }
+          },
+          get: function get() {
+            var _this9 = this;
+
+            return getter.call(this, function () {
+              return _this9.__propertyData[name];
             });
           }
-        },
-        get: function get() {
-          var _this9 = this;
+        });
+      }
 
-          return getter.call(this, function () {
-            return _this9.__propertyData[name];
-          });
-        }
-      });
+      return this;
     }
   },
   unsetProperty: {
@@ -458,11 +482,25 @@ var modelPropertyDescriptors = {
       if (value !== undefined) {
         this[name] = value;
       }
+
+      return this;
     }
   },
   toJSON: {
     value: function value() {
-      return Object.assign({}, this.__propertyData);
+      var json = Object.assign({}, this.__propertyData);
+
+      for (var key in json) {
+        if (json[key].definedByModelPropertyDescriptors) {
+          json[key] = json[key].toJSON();
+        }
+
+        if (json[key].definedByCollectionPropertyDescriptors) {
+          json[key] = json[key].toArray();
+        }
+      }
+
+      return json;
     }
   }
 };
@@ -480,11 +518,9 @@ function modelFactory() {
   }
 
   for (var key in obj) {
-    var propertyDescriptor = Object.getOwnPropertyDescriptor(obj, key);
-
-    if (!propertyDescriptor.get && !propertyDescriptor.set) {
-      obj.setProperty(key);
-    }
+    // const propertyDescriptor = Object.getOwnPropertyDescriptor(obj, key);
+    // if (!propertyDescriptor.get && !propertyDescriptor.set) {
+    obj.setProperty(key); // }
   }
 
   return obj;
@@ -505,6 +541,11 @@ var viewPropertyDescriptors = {
     value: function value(attributes) {
       this.__attributes = attributes;
       return this;
+    }
+  },
+  attrs: {
+    value: function value() {
+      return this.defineAttributes.apply(this, arguments);
     }
   },
   renderAttributesPromise: {
@@ -651,6 +692,11 @@ var viewPropertyDescriptors = {
       return this;
     }
   },
+  els: {
+    value: function value() {
+      return this.defineChildElements.apply(this, arguments);
+    }
+  },
   renderChildElementsPromise: {
     writable: true
   },
@@ -726,9 +772,9 @@ var viewPropertyDescriptors = {
           }
         }
 
-        if (typeof childElement === 'string') {
+        if (typeof childElement === 'boolean' || typeof childElement === 'number' || typeof childElement === 'string') {
           var tempElement = document.createElement('div');
-          tempElement.innerHTML = childElement;
+          tempElement.innerHTML = String(childElement);
           var newChildElements = [];
 
           for (var index = 0, length = tempElement.childNodes.length; index < length; index++) {

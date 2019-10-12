@@ -20,43 +20,48 @@ var modelPropertyDescriptors = {
       var getter = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : function (basicGetter) {
         return basicGetter();
       };
+      var propertyDescriptor = Object.getOwnPropertyDescriptor(this, name);
 
-      if (!this.__propertyData) {
-        this.__propertyData = {};
-      }
+      if (!propertyDescriptor || !propertyDescriptor.get && !propertyDescriptor.set) {
+        if (!this.__propertyData) {
+          this.__propertyData = {};
+        }
 
-      if (_value !== undefined) {
-        this.__propertyData[name] = _value;
-      }
+        if (_value !== undefined) {
+          this.__propertyData[name] = _value;
+        }
 
-      delete this[name];
-      Object.defineProperty(this, name, {
-        configurable: true,
-        enumerable: true,
-        set: function set(value) {
-          var _this = this;
+        delete this[name];
+        Object.defineProperty(this, name, {
+          configurable: true,
+          enumerable: true,
+          set: function set(value) {
+            var _this = this;
 
-          if (this.__propertyData[name] !== value) {
-            var oldValue = this.__propertyData[name];
-            setter.call(this, value, function () {
-              if (_this.definedByEventfulPropertyDescriptors) {
-                _this.__propertyData[name] = value;
+            if (this.__propertyData[name] !== value) {
+              var oldValue = this.__propertyData[name];
+              setter.call(this, value, function () {
+                if (_this.definedByEventfulPropertyDescriptors) {
+                  _this.__propertyData[name] = value;
 
-                _this.trigger('change', name, value, oldValue);
+                  _this.trigger('change', name, value, oldValue);
 
-                _this.trigger("change:".concat(name), value, oldValue);
-              }
+                  _this.trigger("change:".concat(name), value, oldValue);
+                }
+              });
+            }
+          },
+          get: function get() {
+            var _this2 = this;
+
+            return getter.call(this, function () {
+              return _this2.__propertyData[name];
             });
           }
-        },
-        get: function get() {
-          var _this2 = this;
+        });
+      }
 
-          return getter.call(this, function () {
-            return _this2.__propertyData[name];
-          });
-        }
-      });
+      return this;
     }
   },
   unsetProperty: {
@@ -68,11 +73,25 @@ var modelPropertyDescriptors = {
       if (value !== undefined) {
         this[name] = value;
       }
+
+      return this;
     }
   },
   toJSON: {
     value: function value() {
-      return Object.assign({}, this.__propertyData);
+      var json = Object.assign({}, this.__propertyData);
+
+      for (var key in json) {
+        if (json[key].definedByModelPropertyDescriptors) {
+          json[key] = json[key].toJSON();
+        }
+
+        if (json[key].definedByCollectionPropertyDescriptors) {
+          json[key] = json[key].toArray();
+        }
+      }
+
+      return json;
     }
   }
 };
@@ -90,11 +109,9 @@ function modelFactory() {
   }
 
   for (var key in obj) {
-    var propertyDescriptor = Object.getOwnPropertyDescriptor(obj, key);
-
-    if (!propertyDescriptor.get && !propertyDescriptor.set) {
-      obj.setProperty(key);
-    }
+    // const propertyDescriptor = Object.getOwnPropertyDescriptor(obj, key);
+    // if (!propertyDescriptor.get && !propertyDescriptor.set) {
+    obj.setProperty(key); // }
   }
 
   return obj;
