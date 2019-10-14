@@ -2,25 +2,19 @@
 
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
-/* global eventfulPropertyDescriptors */
-
-/* exported viewPropertyDescriptors */
-var viewPropertyDescriptors = {
-  definedByViewPropertyDescriptors: {
+/* global jsmvc */
+window.jsmvc = window.jsmvc || {};
+jsmvc.viewPropertyDescriptors = {
+  definedBy_viewPropertyDescriptors: {
     value: true
   },
-  __attributes: {
+  attributeData: {
     writable: true
   },
   defineAttributes: {
     value: function value(attributes) {
-      this.__attributes = attributes;
+      this.attributeData = attributes;
       return this;
-    }
-  },
-  attrs: {
-    value: function value() {
-      return this.defineAttributes.apply(this, arguments);
     }
   },
   renderAttributesPromise: {
@@ -30,32 +24,15 @@ var viewPropertyDescriptors = {
     value: function value(callbacks) {
       var _this = this;
 
-      // Remove attributes from the view before inserting attributes back.
-      if (this.hasAttributes()) {
-        var attributeKeys = [];
-
-        for (var index = 0, length = this.attributes.length; index < length; index++) {
-          attributeKeys.push(this.attributes[index].name);
-        }
-
-        attributeKeys.forEach(function (key) {
-          return _this.removeAttribute(key);
-        });
-      } // Recursive function use to insert attributes to the view.
+      // Recursive function use to insert attributes to the view.
       // Recursion is used to handle values that is not a number type or a string type.
       // Returns either undefine or a promise.
-
-
       var doRenderAttributes = function doRenderAttributes(value, key) {
         if (typeof value === 'function') {
           return doRenderAttributes(value(), key);
         }
 
-        if (_typeof(value) === 'object') {
-          if (value === null) {
-            return;
-          }
-
+        if (_typeof(value) === 'object' && value !== null) {
           if (value instanceof Promise) {
             return value.then(function (finalValue) {
               return doRenderAttributes(finalValue, key);
@@ -96,19 +73,27 @@ var viewPropertyDescriptors = {
           }
         }
 
-        if (typeof value === 'boolean') {
-          if (value) {
-            return doRenderAttributes('', key);
-          }
+        if (typeof value === 'boolean' && value) {
+          return doRenderAttributes('', key);
         }
 
-        if (value !== undefined && key) {
-          _this.setAttribute(key, String(value));
+        if (key) {
+          if (value != null && value !== false) {
+            var finalValue = String(value);
+
+            if (!_this.hasAttribute(key) || _this.getAttribute(key) !== finalValue) {
+              _this.setAttribute(key, finalValue);
+            }
+          } else {
+            if (_this.hasAttribute(key)) {
+              _this.removeAttribute(key);
+            }
+          }
         }
       }; // Insert attributes to the view.
 
 
-      var result = doRenderAttributes(this.__attributes, null); // A common function to finalize and call the callbacks argument.
+      var result = doRenderAttributes(this.attributeData, null); // A common function to finalize and call the callbacks argument.
       // Returns either undefined or a promise.
 
       var doCallbacks = function doCallbacks() {
@@ -158,18 +143,13 @@ var viewPropertyDescriptors = {
       return this;
     }
   },
-  __childElements: {
+  childElementData: {
     writable: true
   },
   defineChildElements: {
     value: function value(childElements) {
-      this.__childElements = childElements;
+      this.childElementData = childElements;
       return this;
-    }
-  },
-  els: {
-    value: function value() {
-      return this.defineChildElements.apply(this, arguments);
     }
   },
   renderChildElementsPromise: {
@@ -267,7 +247,7 @@ var viewPropertyDescriptors = {
       }; // Insert child elements to the view.
 
 
-      var result = doRenderChildElements(this.__childElements, docFragment.appendChild(document.createTextNode(' ')));
+      var result = doRenderChildElements(this.childElementData, docFragment.appendChild(document.createTextNode(' ')));
       this.appendChild(docFragment);
 
       var complete = function complete() {
@@ -311,7 +291,7 @@ var viewPropertyDescriptors = {
       var promises = [];
 
       if (reRenderChildElement) {
-        var childElements = this.__childElements;
+        var childElements = this.childElementData;
 
         if (Array.isArray(childElements)) {
           childElements = childElements.slice();
@@ -320,7 +300,7 @@ var viewPropertyDescriptors = {
         }
 
         childElements.forEach(function (childElement) {
-          if (childElement.definedByViewPropertyDescriptors) {
+          if (childElement.definedBy_viewPropertyDescriptors) {
             promises.push(childElement.render().renderPromise);
           }
         });
@@ -383,11 +363,11 @@ var viewPropertyDescriptors = {
 
       var promises = [];
 
-      if (this.__attributes) {
+      if (this.attributeData) {
         promises.push(this.renderAttributes().renderAttributesPromise);
       }
 
-      if (this.__childElements) {
+      if (this.childElementData) {
         promises.push(this.renderChildElements(null, reRenderChildElement).renderChildElementsPromise);
       }
 
@@ -413,15 +393,15 @@ var viewPropertyDescriptors = {
     }
   }
 };
-/* exported viewFactory */
+/* exported view */
 
-function viewFactory(element, attributes, childElements, callbacks) {
+jsmvc.view = function (element, attributes, childElements, callbacks) {
   if (typeof element === 'string') {
     element = document.createElement(element);
   }
 
-  if (!element.definedByEventfulPropertyDescriptors) {
-    Object.defineProperties(element, eventfulPropertyDescriptors);
+  if (jsmvc.eventful) {
+    element = jsmvc.eventful(element);
   }
 
   if (element.hasAttributes()) {
@@ -470,19 +450,21 @@ function viewFactory(element, attributes, childElements, callbacks) {
     }
   }
 
-  if (!element.definedByViewPropertyDescriptors) {
-    Object.defineProperties(element, viewPropertyDescriptors);
+  if (!element.definedBy_viewPropertyDescriptors) {
+    Object.defineProperties(element, jsmvc.viewPropertyDescriptors);
   }
 
   return element.defineAttributes(attributes).defineChildElements(childElements).render(callbacks, false);
-}
+};
 
-['a', 'abbr', 'acronym', 'address', 'applet', 'area', 'article', 'aside', 'audio', 'b', 'base', 'basefont', 'bdi', 'bdo', 'big', 'blockquote', 'body', 'br', 'button', 'canvas', 'caption', 'center', 'cite', 'code', 'col', 'colgroup', 'datalist', 'dd', 'del', 'details', 'dfn', 'dialog', 'dir', 'div', 'dl', 'dt', 'em', 'embed', 'fieldset', 'figcaption', 'figure', 'font', 'footer', 'form', 'frame', 'frameset', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'head', 'header', 'hr', 'viewFactoryl', 'i', 'iframe', 'img', 'input', 'ins', 'kbd', 'keygen', 'label', 'legend', 'li', 'link', 'main', 'map', 'mark', 'menu', 'menuitem', 'meta', 'meter', 'nav', 'noframes', 'noscript', 'object', 'ol', 'optgroup', 'option', 'output', 'p', 'param', 'picture', 'pre', 'progress', 'q', 'rp', 'rt', 'ruby', 's', 'samp', 'script', 'section', 'select', 'small', 'source', 'span', 'strike', 'strong', 'style', 'sub', 'summary', 'sup', 'table', 'tbody', 'td', 'textarea', 'tfoot', 'th', 'thead', 'time', 'title', 'tr', 'track', 'tt', 'u', 'ul', 'var', 'video', 'wbr'].forEach(function (element) {
-  viewFactory[element] = function () {
+['a', 'abbr', 'address', 'area', 'article', 'aside', 'audio', 'b', 'base', 'bdi', 'bdo', 'blockquote', 'body', 'br', 'button', 'canvas', 'caption', 'cite', 'code', 'col', 'colgroup', 'data', 'datalist', 'dd', 'del', 'details', 'dfn', 'dialog', 'div', 'dl', 'dt', 'em', 'embed', 'fieldset', 'figure', 'footer', 'form', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'head', 'header', 'hgroup', 'hr', 'html', 'i', 'iframe', 'img', 'input', 'ins', 'kbd', 'keygen', 'label', 'legend', 'li', 'link', 'main', 'map', 'mark', 'menu', 'menuitem', 'meta', 'meter', 'nav', 'noscript', 'object', 'ol', 'optgroup', 'option', 'output', 'p', 'param', 'pre', 'progress', 'q', 'rb', 'rp', 'rt', 'rtc', 'ruby', 's', 'samp', 'script', 'section', 'select', 'small', 'source', 'span', 'strong', 'style', 'sub', 'summary', 'sup', 'table', 'tbody', 'td', 'template', 'textarea', 'tfoot', 'th', 'thead', 'time', 'title', 'tr', 'track', 'u', 'ul', 'var', 'video', 'wbr'].forEach(function (element) {
+  jsmvc.view[element] = function () {
+    var _jsmvc;
+
     for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
       args[_key] = arguments[_key];
     }
 
-    return viewFactory.apply(void 0, [element].concat(args));
+    return (_jsmvc = jsmvc).view.apply(_jsmvc, [element].concat(args));
   };
 });

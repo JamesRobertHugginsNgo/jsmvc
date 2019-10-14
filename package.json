@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "NPM_Install": "npm install",
-    "Build": "gulp"
+    "Build": "gulp",
+    "Make_Doc": "gulp makeDoc"
   },
   "keywords": [
     "JavaScript",
@@ -27,6 +28,7 @@
     "gulp-babel": "^8.0.0",
     "gulp-concat": "^2.6.1",
     "gulp-eslint": "^6.0.0",
+    "gulp-jsdoc3": "^2.0.0",
     "gulp-rename": "^1.4.0",
     "gulp-uglify": "^3.0.2"
   }

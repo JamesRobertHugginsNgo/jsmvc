@@ -10,20 +10,19 @@ function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.
 
 function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
 
-/* global eventfulPropertyDescriptors */
-
-/* exported collectionPropertyDescriptors */
-var collectionPropertyDescriptors = {
-  definedByCollectionPropertyDescriptors: {
+/* global jsmvc */
+window.jsmvc = window.jsmvc || {};
+jsmvc.collectionPropertyDescriptors = {
+  definedBy_collectionPropertyDescriptors: {
     value: true
   },
-  __collectionData: {
+  collectionData: {
     writable: true
   },
   length: {
     get: function get() {
-      if (this.__collectionData) {
-        return this.__collectionData.length;
+      if (this.collectionData) {
+        return this.collectionData.length;
       }
 
       return 0;
@@ -43,12 +42,12 @@ var collectionPropertyDescriptors = {
               set: function set(value) {
                 var _this2 = this;
 
-                if (this.__collectionData[key] !== value) {
-                  var oldValue = this.__collectionData[key];
+                if (this.collectionData[key] !== value) {
+                  var oldValue = this.collectionData[key];
                   this.itemSetter.call(this, value, function () {
-                    _this2.__collectionData[key] = value;
+                    _this2.collectionData[key] = value;
 
-                    if (_this2.definedByEventfulPropertyDescriptors) {
+                    if (_this2.definedBy_eventfulPropertyDescriptors) {
                       _this2.trigger('change', key, value, oldValue);
 
                       _this2.trigger("change:".concat(key), value, oldValue);
@@ -60,7 +59,7 @@ var collectionPropertyDescriptors = {
                 var _this3 = this;
 
                 return this.itemGetter(function () {
-                  return _this3.__collectionData[key];
+                  return _this3.collectionData[key];
                 });
               }
             });
@@ -85,14 +84,13 @@ var collectionPropertyDescriptors = {
   },
   toArray: {
     value: function value() {
-      var array = this.__collectionData.slice();
-
+      var array = this.collectionData.slice();
       array.forEach(function (value, index) {
-        if (value.definedByModelPropertyDescriptors) {
+        if (value.definedBy_modelPropertyDescriptors) {
           array[index] = value.toJSON();
         }
 
-        if (value.definedByCollectionPropertyDescriptors) {
+        if (value.definedBy_collectionPropertyDescriptors) {
           array[index] = value.toArray();
         }
       });
@@ -101,12 +99,12 @@ var collectionPropertyDescriptors = {
   }
 };
 ['copyWithin', 'fill', 'pop', 'push', 'reverse', 'shift', 'sort', 'splice', 'unshift'].forEach(function (method) {
-  collectionPropertyDescriptors[method] = {
+  jsmvc.collectionPropertyDescriptors[method] = {
     value: function value() {
       var _Array$prototype$meth;
 
-      if (!this.__collectionData) {
-        this.__collectionData = [];
+      if (!this.collectionData) {
+        this.collectionData = [];
       }
 
       var startingLength = this.length;
@@ -115,12 +113,12 @@ var collectionPropertyDescriptors = {
         args[_key] = arguments[_key];
       }
 
-      var returnValue = (_Array$prototype$meth = Array.prototype[method]).call.apply(_Array$prototype$meth, [this.__collectionData].concat(args));
+      var returnValue = (_Array$prototype$meth = Array.prototype[method]).call.apply(_Array$prototype$meth, [this.collectionData].concat(args));
 
       this.finalizeData(startingLength);
 
-      if (this.definedByEventfulPropertyDescriptors) {
-        this.triggerHandlers('change');
+      if (this.definedBy_eventfulPropertyDescriptors) {
+        this.triggerEvents('change');
       }
 
       return returnValue;
@@ -128,25 +126,24 @@ var collectionPropertyDescriptors = {
   };
 });
 ['concat', 'includes', 'indexOf', 'join', 'lastIndexOf', 'slice', 'toSource', 'toString', 'toLocaleString', 'entries', 'every', 'filter', 'find', 'findIndex', 'forEach', 'keys', 'map', 'reduce', 'reduceRight', 'some', 'values'].forEach(function (method) {
-  collectionPropertyDescriptors[method] = {
+  jsmvc.collectionPropertyDescriptors[method] = {
     value: function value() {
       var _Array$prototype$meth2;
 
-      if (!this.__collectionData) {
-        this.__collectionData = [];
+      if (!this.collectionData) {
+        this.collectionData = [];
       }
 
       for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
         args[_key2] = arguments[_key2];
       }
 
-      return (_Array$prototype$meth2 = Array.prototype[method]).call.apply(_Array$prototype$meth2, [this.__collectionData].concat(args));
+      return (_Array$prototype$meth2 = Array.prototype[method]).call.apply(_Array$prototype$meth2, [this.collectionData].concat(args));
     }
   };
 });
-/* exported collectionFactory */
 
-function collectionFactory() {
+jsmvc.collection = function () {
   var _obj;
 
   var arr = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
@@ -157,266 +154,247 @@ function collectionFactory() {
     arr = [];
   }
 
-  if (!obj.definedByEventfulPropertyDescriptors) {
-    Object.defineProperties(obj, eventfulPropertyDescriptors);
+  if (jsmvc.eventful) {
+    obj = jsmvc.eventful(obj);
   }
 
-  if (!obj.definedByCollectionPropertyDescriptors) {
-    Object.defineProperties(obj, collectionPropertyDescriptors);
+  if (!obj.definedBy_collectionPropertyDescriptors) {
+    Object.defineProperties(obj, jsmvc.collectionPropertyDescriptors);
   }
 
   (_obj = obj).push.apply(_obj, _toConsumableArray(arr));
 
   return obj;
-}
-/* exported eventfulPropertyDescriptors */
+};
+/* global jsmvc */
 
 
-var eventfulPropertyDescriptors = {
-  definedByEventfulPropertyDescriptors: {
+window.jsmvc = window.jsmvc || {};
+jsmvc.eventfulPropertyDescriptors = {
+  definedBy_eventfulPropertyDescriptors: {
     value: true
   },
-  __handlerData: {
+  eventfulEnabled: {
     writable: true
   },
-  __handlerReferences: {
+  enableEventful: {
+    value: function value() {
+      this.eventfulEnabled = true;
+    }
+  },
+  disableEventful: {
+    value: function value() {
+      this.eventfulEnabled = false;
+    }
+  },
+  eventfulData: {
     writable: true
   },
-  addHandler: {
+  eventfulReferences: {
+    writable: true
+  },
+  addEvent: {
     value: function value(name, handler) {
       var _this4 = this;
 
       var once = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
       var owner = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : this;
-      var enabled = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : true;
-      var handlerData = {
+      var eventfulData = {
         handler: handler,
         once: once,
-        owner: owner,
-        enabled: enabled
+        owner: owner
       };
 
-      if (this.addEventListener) {
-        var eventListener = function eventListener() {
-          if (handlerData.enabled) {
-            handler.apply(void 0, arguments);
+      if (this instanceof EventTarget) {
+        var listener = function listener() {
+          var handler = eventfulData.handler,
+              once = eventfulData.once,
+              owner = eventfulData.owner;
+          handler.apply(void 0, arguments);
 
-            if (handlerData.once) {
-              _this4.removeHandlers(handlerData.name, handlerData.handler, handlerData.once, handlerData.owner, null, {
-                calledFromEventListener: true
-              });
-            }
+          if (once) {
+            _this4.removeEvents(name, handler, once, owner);
           }
         };
 
-        this.addEventListener(name, eventListener, {
+        this.addEventListener(name, listener, {
           once: once
         });
-        handlerData.listener = eventListener;
+        eventfulData.listener = listener;
       }
 
-      if (!this.__handlerData) {
-        this.__handlerData = {};
+      if (!this.eventfulData) {
+        this.eventfulData = {};
       }
 
-      if (!this.__handlerData[name]) {
-        this.__handlerData[name] = [];
+      if (!this.eventfulData[name]) {
+        this.eventfulData[name] = [];
       }
 
-      this.__handlerData[name].push(handlerData);
+      this.eventfulData[name].push(eventfulData);
 
-      if (owner && owner !== this && owner.definedByEventfulPropertyDescriptors) {
-        if (!owner.__handlerReferences) {
-          owner.__handlerReferences = {};
+      if (owner && owner !== this && owner.definedBy_eventfulPropertyDescriptors) {
+        if (!owner.eventfulReferences) {
+          owner.eventfulReferences = {};
         }
 
-        if (!owner.__handlerReferences[name]) {
-          owner.__handlerReferences[name] = [];
+        if (!owner.eventfulReferences[name]) {
+          owner.eventfulReferences[name] = [];
         }
 
-        owner.__handlerReferences[name].push({
+        owner.eventfulReferences[name].push({
           emitter: this,
-          handlerData: handlerData
+          eventfulData: eventfulData
         });
       }
 
       return this;
     }
   },
-  on: {
-    value: function value() {
-      return this.addHandler.apply(this, arguments);
-    }
-  },
-  removeHandlers: {
-    value: function value(name, handler, once, owner, enabled) {
-      var options = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : {};
+  removeEvents: {
+    value: function value(name, handler, once, owner) {
+      if (this.eventfulData) {
+        for (var key in this.eventfulData) {
+          if (name == null || key === name) {
+            var index1 = 0;
 
-      if (!this.__handlerData) {
-        return this;
-      }
+            while (index1 < this.eventfulData[key].length) {
+              var eventfulData = this.eventfulData[key][index1];
 
-      for (var key in this.__handlerData) {
-        if (name == null || name === key) {
-          var index = 0;
+              if ((handler == null || eventfulData.handler === handler) && (once == null || eventfulData.once === once) && (owner == null || eventfulData.owner === owner)) {
+                if (this instanceof EventTarget) {
+                  this.removeEventListener(key, eventfulData.listener);
+                }
 
-          while (index < this.__handlerData[key].length) {
-            var handlerData = this.__handlerData[key][index];
+                this.eventfulData[key].splice(index1, 1);
 
-            if ((handler == null || handler === handlerData.handler) && (once == null || once === handlerData.once) && (owner == null || owner === handlerData.owner) && (enabled == null || enabled === handlerData.enabled)) {
-              if (this.removeEventListener && !options.calledFromEventListener) {
-                this.removeEventListener(key, handlerData.listener);
-              }
+                if (owner && owner !== this && owner.definedBy_eventfulPropertyDescriptors) {
+                  if (owner.eventfulReferences[key]) {
+                    var index2 = 0;
 
-              this.__handlerData[key].splice(index, 1);
+                    while (index2 > owner.eventfulReferences[key].length) {
+                      var eventfulReference = owner.eventfulReferences[key][index2];
 
-              if (owner && owner !== this && owner.definedByEventfulPropertyDescriptors && owner.__handlerReferences && owner.__handlerReferences[key] && !options.calledFromCleanUpHandlers) {
-                var index2 = 0;
-
-                while (index2 > owner.__handlerReferences[key].length) {
-                  var handlerReferences = owner.__handlerReferences[key][index2];
-
-                  if (handlerReferences.emitter === this && handlerReferences.handlerData === handlerData) {
-                    owner.__handlerReferences.splice(index2, 1);
-                  } else {
-                    index2++;
+                      if (eventfulReference.emitter === this && eventfulReference.eventfulData === eventfulData) {
+                        owner.eventfulReferences.splice(index2, 1);
+                      } else {
+                        index2++;
+                      }
+                    }
                   }
                 }
+              } else {
+                index1++;
               }
-            } else {
-              index++;
+            }
+
+            if (name != null) {
+              break;
             }
           }
-
-          if (name != null) {
-            break;
-          }
         }
       }
 
       return this;
     }
   },
-  off: {
-    value: function value() {
-      return this.removeHandlers.apply(this, arguments);
-    }
-  },
-  enableHandlers: {
-    value: function value(name, handler, once, owner, enabled) {
-      var _this5 = this;
-
-      if (!this.__handlerData) {
-        return this;
-      }
-
-      var _loop = function _loop(key) {
-        if (name == null || name === key) {
-          _this5.__handlerData[key].forEach(function (handlerData, index) {
-            if ((handler == null || handler === handlerData.handler) && (once == null || once === handlerData.once) && (owner == null || owner === handlerData.owner) && (enabled == null || enabled === handlerData.enabled)) {
-              _this5.__handlerData[key][index].enabled = true;
-            }
-          });
-        }
-      };
-
-      for (var key in this.__handlerData) {
-        _loop(key);
-      }
-
-      return this;
-    }
-  },
-  disableHandlers: {
-    value: function value(name, handler, once, owner, enabled) {
-      var _this6 = this;
-
-      if (!this.__handlerData) {
-        return this;
-      }
-
-      var _loop2 = function _loop2(key) {
-        if (name == null || name === key) {
-          _this6.__handlerData[key].forEach(function (handlerData, index) {
-            if ((handler == null || handler === handlerData.handler) && (once == null || once === handlerData.once) && (owner == null || owner === handlerData.owner) && (enabled == null || enabled === handlerData.enabled)) {
-              _this6.__handlerData[key][index].enabled = false;
-            }
-          });
-        }
-      };
-
-      for (var key in this.__handlerData) {
-        _loop2(key);
-      }
-
-      return this;
-    }
-  },
-  triggerHandlers: {
+  triggerEvents: {
     value: function value(name) {
       for (var _len3 = arguments.length, args = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
         args[_key3 - 1] = arguments[_key3];
       }
 
-      if (!this.__handlerData || !this.__handlerData[name]) {
-        return this;
+      if (this.eventfulEnabled !== false && this.eventfulData && this.eventfulData[name]) {
+        this.eventfulData[name].forEach(function (_ref) {
+          var handler = _ref.handler,
+              owner = _ref.owner;
+          handler.call.apply(handler, [owner].concat(args));
+        });
+        this.removeEvents(name, null, true, null);
       }
 
-      this.__handlerData[name].forEach(function (handlerData) {
-        if (handlerData.enabled) {
-          var _handlerData$handler;
-
-          (_handlerData$handler = handlerData.handler).call.apply(_handlerData$handler, [handlerData.context].concat(args));
-        }
-      });
-
-      this.removeHandlers(name, null, true, null, true);
       return this;
     }
   },
-  trigger: {
-    value: function value() {
-      return this.triggerHandlers.apply(this, arguments);
-    }
-  },
-  cleanUpHandlers: {
-    value: function value() {
-      var _this7 = this;
-
-      this.removeHandlers();
-
-      if (!this.__handlerReferences) {
-        return this;
+  addEmitterEvent: {
+    value: function value(emitter, name, handler, once) {
+      if (emitter.definedBy_eventfulPropertyDescriptors) {
+        emitter.addEvent(name, handler, once, this);
       }
 
-      var _loop3 = function _loop3(key) {
-        _this7.__handlerReferences[key].forEach(function (handlerReference) {
-          var _handlerReference$eve = handlerReference.eventData,
-              handler = _handlerReference$eve.handler,
-              once = _handlerReference$eve.once;
-          handlerReference.emitter.removeHandlers(key, handler, once, _this7, null, {
-            calledFromCleanUpHandlers: true
-          });
-        });
-      };
+      return this;
+    }
+  },
+  removeEmitterEvents: {
+    value: function value(emitter, name, handler, once) {
+      var _this5 = this;
 
-      for (var key in this.__handlerReferences) {
-        _loop3(key);
+      if (this.eventfulReferences) {
+        var _loop = function _loop(key) {
+          if (name == null || key === name) {
+            var emitters = [];
+
+            for (var index = 0, length = _this5.eventfulReferences[key].length; index < length; index++) {
+              var eventfulReference = _this5.eventfulReferences[key][index];
+
+              if (emitter == null || eventfulReference.emitter === emitter) {
+                if (emitters.indexOf(eventfulReference.emitter) === -1) {
+                  emitters.push(eventfulReference.emitter);
+                }
+              }
+
+              if (emitter != null) {
+                break;
+              }
+            }
+
+            emitters.forEach(function (emitter) {
+              if (emitter.definedBy_eventfulPropertyDescriptors) {
+                emitter.removeEvents(key, handler, once, _this5);
+              }
+            });
+
+            if (name != null) {
+              return "break";
+            }
+          }
+        };
+
+        for (var key in this.eventfulReferences) {
+          var _ret = _loop(key);
+
+          if (_ret === "break") break;
+        }
       }
 
       return this;
     }
   }
 };
-/* global eventfulPropertyDescriptors */
+jsmvc.eventfulPropertyDescriptors.on = jsmvc.eventfulPropertyDescriptors.addEvent;
+jsmvc.eventfulPropertyDescriptors.off = jsmvc.eventfulPropertyDescriptors.removeEvents;
+jsmvc.eventfulPropertyDescriptors.trigger = jsmvc.eventfulPropertyDescriptors.triggerEvents;
+jsmvc.eventfulPropertyDescriptors.listenTo = jsmvc.eventfulPropertyDescriptors.addEmitterEvent;
+jsmvc.eventfulPropertyDescriptors.stopListening = jsmvc.eventfulPropertyDescriptors.removeEmitterEvents;
 
-/* exported modelPropertyDescriptors */
+jsmvc.eventful = function () {
+  var obj = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
-var modelPropertyDescriptors = {
-  definedByModelPropertyDescriptors: {
+  if (!obj.definedBy_eventfulPropertyDescriptors) {
+    Object.defineProperties(obj, jsmvc.eventfulPropertyDescriptors);
+  }
+
+  return obj;
+};
+/* global jsmvc */
+
+
+window.jsmvc = window.jsmvc || {};
+jsmvc.modelPropertyDescriptors = {
+  definedBy_modelPropertyDescriptors: {
     value: true
   },
-  __propertyData: {
+  propertyData: {
     writable: true
   },
   setProperty: {
@@ -432,12 +410,12 @@ var modelPropertyDescriptors = {
       var propertyDescriptor = Object.getOwnPropertyDescriptor(this, name);
 
       if (!propertyDescriptor || !propertyDescriptor.get && !propertyDescriptor.set) {
-        if (!this.__propertyData) {
-          this.__propertyData = {};
-        }
-
         if (_value2 !== undefined) {
-          this.__propertyData[name] = _value2;
+          if (!this.propertyData) {
+            this.propertyData = {};
+          }
+
+          this.propertyData[name] = _value2;
         }
 
         delete this[name];
@@ -445,26 +423,39 @@ var modelPropertyDescriptors = {
           configurable: true,
           enumerable: true,
           set: function set(value) {
-            var _this8 = this;
+            var _this6 = this;
 
-            if (this.__propertyData[name] !== value) {
-              var oldValue = this.__propertyData[name];
+            if (!this.propertyData || this.propertyData[name] !== value) {
+              var oldValue;
+
+              if (this.propertyData && this.propertyData[name] !== undefined) {
+                oldValue = this.propertyData[name];
+              }
+
               setter.call(this, value, function () {
-                if (_this8.definedByEventfulPropertyDescriptors) {
-                  _this8.__propertyData[name] = value;
+                if (!_this6.propertyData) {
+                  _this6.propertyData = {};
+                }
 
-                  _this8.trigger('change', name, value, oldValue);
+                _this6.propertyData[name] = value;
 
-                  _this8.trigger("change:".concat(name), value, oldValue);
+                if (_this6.definedBy_eventfulPropertyDescriptors) {
+                  _this6.triggerEvents('change', name, value, oldValue);
+
+                  _this6.triggerEvents("change:".concat(name), value, oldValue);
                 }
               });
             }
           },
           get: function get() {
-            var _this9 = this;
+            var _this7 = this;
 
             return getter.call(this, function () {
-              return _this9.__propertyData[name];
+              if (_this7.propertyData) {
+                return _this7.propertyData[name];
+              }
+
+              return;
             });
           }
         });
@@ -475,12 +466,21 @@ var modelPropertyDescriptors = {
   },
   unsetProperty: {
     value: function value(name) {
-      var value = this.__propertyData[name];
-      delete this.__propertyData[name];
-      delete this[name];
+      var propertyDescriptor = Object.getOwnPropertyDescriptor(this, name);
 
-      if (value !== undefined) {
-        this[name] = value;
+      if (propertyDescriptor && (propertyDescriptor.get || propertyDescriptor.set)) {
+        var value;
+
+        if (this.propertyData) {
+          value = this.propertyData[name];
+        }
+
+        delete this.propertyData[name];
+        delete this[name];
+
+        if (value !== undefined) {
+          this[name] = value;
+        }
       }
 
       return this;
@@ -488,14 +488,14 @@ var modelPropertyDescriptors = {
   },
   toJSON: {
     value: function value() {
-      var json = Object.assign({}, this.__propertyData);
+      var json = Object.assign({}, this.propertyData);
 
       for (var key in json) {
-        if (json[key].definedByModelPropertyDescriptors) {
+        if (json[key].definedBy_modelPropertyDescriptors) {
           json[key] = json[key].toJSON();
         }
 
-        if (json[key].definedByCollectionPropertyDescriptors) {
+        if (json[key].definedBy_collectionPropertyDescriptors) {
           json[key] = json[key].toArray();
         }
       }
@@ -504,48 +504,39 @@ var modelPropertyDescriptors = {
     }
   }
 };
-/* exported modelFactory */
 
-function modelFactory() {
+jsmvc.model = function () {
   var obj = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
-  if (!obj.definedByEventfulPropertyDescriptors) {
-    Object.defineProperties(obj, eventfulPropertyDescriptors);
+  if (jsmvc.eventful) {
+    obj = jsmvc.eventful(obj);
   }
 
-  if (!obj.definedByModelPropertyDescriptors) {
-    Object.defineProperties(obj, modelPropertyDescriptors);
+  if (!obj.definedBy_modelPropertyDescriptors) {
+    Object.defineProperties(obj, jsmvc.modelPropertyDescriptors);
   }
 
   for (var key in obj) {
-    // const propertyDescriptor = Object.getOwnPropertyDescriptor(obj, key);
-    // if (!propertyDescriptor.get && !propertyDescriptor.set) {
-    obj.setProperty(key); // }
+    obj.setProperty(key);
   }
 
   return obj;
-}
-/* global eventfulPropertyDescriptors */
-
-/* exported viewPropertyDescriptors */
+};
+/* global jsmvc */
 
 
-var viewPropertyDescriptors = {
-  definedByViewPropertyDescriptors: {
+window.jsmvc = window.jsmvc || {};
+jsmvc.viewPropertyDescriptors = {
+  definedBy_viewPropertyDescriptors: {
     value: true
   },
-  __attributes: {
+  attributeData: {
     writable: true
   },
   defineAttributes: {
     value: function value(attributes) {
-      this.__attributes = attributes;
+      this.attributeData = attributes;
       return this;
-    }
-  },
-  attrs: {
-    value: function value() {
-      return this.defineAttributes.apply(this, arguments);
     }
   },
   renderAttributesPromise: {
@@ -553,34 +544,17 @@ var viewPropertyDescriptors = {
   },
   renderAttributes: {
     value: function value(callbacks) {
-      var _this10 = this;
+      var _this8 = this;
 
-      // Remove attributes from the view before inserting attributes back.
-      if (this.hasAttributes()) {
-        var attributeKeys = [];
-
-        for (var index = 0, length = this.attributes.length; index < length; index++) {
-          attributeKeys.push(this.attributes[index].name);
-        }
-
-        attributeKeys.forEach(function (key) {
-          return _this10.removeAttribute(key);
-        });
-      } // Recursive function use to insert attributes to the view.
+      // Recursive function use to insert attributes to the view.
       // Recursion is used to handle values that is not a number type or a string type.
       // Returns either undefine or a promise.
-
-
       var doRenderAttributes = function doRenderAttributes(value, key) {
         if (typeof value === 'function') {
           return doRenderAttributes(value(), key);
         }
 
-        if (_typeof(value) === 'object') {
-          if (value === null) {
-            return;
-          }
-
+        if (_typeof(value) === 'object' && value !== null) {
           if (value instanceof Promise) {
             return value.then(function (finalValue) {
               return doRenderAttributes(finalValue, key);
@@ -621,19 +595,27 @@ var viewPropertyDescriptors = {
           }
         }
 
-        if (typeof value === 'boolean') {
-          if (value) {
-            return doRenderAttributes('', key);
-          }
+        if (typeof value === 'boolean' && value) {
+          return doRenderAttributes('', key);
         }
 
-        if (value !== undefined && key) {
-          _this10.setAttribute(key, String(value));
+        if (key) {
+          if (value != null && value !== false) {
+            var finalValue = String(value);
+
+            if (!_this8.hasAttribute(key) || _this8.getAttribute(key) !== finalValue) {
+              _this8.setAttribute(key, finalValue);
+            }
+          } else {
+            if (_this8.hasAttribute(key)) {
+              _this8.removeAttribute(key);
+            }
+          }
         }
       }; // Insert attributes to the view.
 
 
-      var result = doRenderAttributes(this.__attributes, null); // A common function to finalize and call the callbacks argument.
+      var result = doRenderAttributes(this.attributeData, null); // A common function to finalize and call the callbacks argument.
       // Returns either undefined or a promise.
 
       var doCallbacks = function doCallbacks() {
@@ -647,7 +629,7 @@ var viewPropertyDescriptors = {
 
         var promises = [];
         callbacks.forEach(function (callback) {
-          var result = callback(_this10);
+          var result = callback(_this8);
 
           if (result instanceof Promise) {
             promises.push(result);
@@ -666,14 +648,14 @@ var viewPropertyDescriptors = {
         this.renderAttributesPromise = result.then(function () {
           return doCallbacks();
         }).then(function () {
-          return _this10;
+          return _this8;
         });
       } else {
         var result2 = doCallbacks();
 
         if (result2 instanceof Promise) {
           this.renderAttributesPromise = result2.then(function () {
-            return _this10;
+            return _this8;
           });
         } else {
           this.renderAttributesPromise = Promise.resolve(this);
@@ -683,18 +665,13 @@ var viewPropertyDescriptors = {
       return this;
     }
   },
-  __childElements: {
+  childElementData: {
     writable: true
   },
   defineChildElements: {
     value: function value(childElements) {
-      this.__childElements = childElements;
+      this.childElementData = childElements;
       return this;
-    }
-  },
-  els: {
-    value: function value() {
-      return this.defineChildElements.apply(this, arguments);
     }
   },
   renderChildElementsPromise: {
@@ -702,7 +679,7 @@ var viewPropertyDescriptors = {
   },
   renderChildElements: {
     value: function value(callbacks) {
-      var _this11 = this;
+      var _this9 = this;
 
       var reRenderChildElement = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
 
@@ -792,7 +769,7 @@ var viewPropertyDescriptors = {
       }; // Insert child elements to the view.
 
 
-      var result = doRenderChildElements(this.__childElements, docFragment.appendChild(document.createTextNode(' ')));
+      var result = doRenderChildElements(this.childElementData, docFragment.appendChild(document.createTextNode(' ')));
       this.appendChild(docFragment);
 
       var complete = function complete() {
@@ -809,7 +786,7 @@ var viewPropertyDescriptors = {
 
           var promises = [];
           callbacks.forEach(function (callback) {
-            var result = callback(_this11);
+            var result = callback(_this9);
 
             if (result instanceof Promise) {
               promises.push(result);
@@ -836,7 +813,7 @@ var viewPropertyDescriptors = {
       var promises = [];
 
       if (reRenderChildElement) {
-        var childElements = this.__childElements;
+        var childElements = this.childElementData;
 
         if (Array.isArray(childElements)) {
           childElements = childElements.slice();
@@ -845,7 +822,7 @@ var viewPropertyDescriptors = {
         }
 
         childElements.forEach(function (childElement) {
-          if (childElement.definedByViewPropertyDescriptors) {
+          if (childElement.definedBy_viewPropertyDescriptors) {
             promises.push(childElement.render().renderPromise);
           }
         });
@@ -855,14 +832,14 @@ var viewPropertyDescriptors = {
         this.renderChildElementsPromise = Promise.all(promises).then(function () {
           return complete();
         }).then(function () {
-          return _this11;
+          return _this9;
         });
       } else {
         var result2 = complete();
 
         if (result2 instanceof Promise) {
           this.renderChildElementsPromise = result2.then(function () {
-            return _this11;
+            return _this9;
           });
         } else {
           this.renderChildElementsPromise = Promise.resolve(this);
@@ -877,7 +854,7 @@ var viewPropertyDescriptors = {
   },
   render: {
     value: function value(callbacks) {
-      var _this12 = this;
+      var _this10 = this;
 
       var reRenderChildElement = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
 
@@ -894,7 +871,7 @@ var viewPropertyDescriptors = {
 
         var promises = [];
         callbacks.forEach(function (callback) {
-          var result = callback(_this12);
+          var result = callback(_this10);
 
           if (result instanceof Promise) {
             promises.push(result);
@@ -908,11 +885,11 @@ var viewPropertyDescriptors = {
 
       var promises = [];
 
-      if (this.__attributes) {
+      if (this.attributeData) {
         promises.push(this.renderAttributes().renderAttributesPromise);
       }
 
-      if (this.__childElements) {
+      if (this.childElementData) {
         promises.push(this.renderChildElements(null, reRenderChildElement).renderChildElementsPromise);
       }
 
@@ -920,14 +897,14 @@ var viewPropertyDescriptors = {
         this.renderPromise = Promise.all(promises).then(function () {
           return doCallbacks();
         }).then(function () {
-          return _this12;
+          return _this10;
         });
       } else {
         var result2 = doCallbacks();
 
         if (result2 instanceof Promise) {
           this.renderPromise = result2.then(function () {
-            return _this12;
+            return _this10;
           });
         } else {
           this.renderPromise = Promise.resolve(this);
@@ -938,15 +915,15 @@ var viewPropertyDescriptors = {
     }
   }
 };
-/* exported viewFactory */
+/* exported view */
 
-function viewFactory(element, attributes, childElements, callbacks) {
+jsmvc.view = function (element, attributes, childElements, callbacks) {
   if (typeof element === 'string') {
     element = document.createElement(element);
   }
 
-  if (!element.definedByEventfulPropertyDescriptors) {
-    Object.defineProperties(element, eventfulPropertyDescriptors);
+  if (jsmvc.eventful) {
+    element = jsmvc.eventful(element);
   }
 
   if (element.hasAttributes()) {
@@ -995,19 +972,21 @@ function viewFactory(element, attributes, childElements, callbacks) {
     }
   }
 
-  if (!element.definedByViewPropertyDescriptors) {
-    Object.defineProperties(element, viewPropertyDescriptors);
+  if (!element.definedBy_viewPropertyDescriptors) {
+    Object.defineProperties(element, jsmvc.viewPropertyDescriptors);
   }
 
   return element.defineAttributes(attributes).defineChildElements(childElements).render(callbacks, false);
-}
+};
 
-['a', 'abbr', 'acronym', 'address', 'applet', 'area', 'article', 'aside', 'audio', 'b', 'base', 'basefont', 'bdi', 'bdo', 'big', 'blockquote', 'body', 'br', 'button', 'canvas', 'caption', 'center', 'cite', 'code', 'col', 'colgroup', 'datalist', 'dd', 'del', 'details', 'dfn', 'dialog', 'dir', 'div', 'dl', 'dt', 'em', 'embed', 'fieldset', 'figcaption', 'figure', 'font', 'footer', 'form', 'frame', 'frameset', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'head', 'header', 'hr', 'viewFactoryl', 'i', 'iframe', 'img', 'input', 'ins', 'kbd', 'keygen', 'label', 'legend', 'li', 'link', 'main', 'map', 'mark', 'menu', 'menuitem', 'meta', 'meter', 'nav', 'noframes', 'noscript', 'object', 'ol', 'optgroup', 'option', 'output', 'p', 'param', 'picture', 'pre', 'progress', 'q', 'rp', 'rt', 'ruby', 's', 'samp', 'script', 'section', 'select', 'small', 'source', 'span', 'strike', 'strong', 'style', 'sub', 'summary', 'sup', 'table', 'tbody', 'td', 'textarea', 'tfoot', 'th', 'thead', 'time', 'title', 'tr', 'track', 'tt', 'u', 'ul', 'var', 'video', 'wbr'].forEach(function (element) {
-  viewFactory[element] = function () {
+['a', 'abbr', 'address', 'area', 'article', 'aside', 'audio', 'b', 'base', 'bdi', 'bdo', 'blockquote', 'body', 'br', 'button', 'canvas', 'caption', 'cite', 'code', 'col', 'colgroup', 'data', 'datalist', 'dd', 'del', 'details', 'dfn', 'dialog', 'div', 'dl', 'dt', 'em', 'embed', 'fieldset', 'figure', 'footer', 'form', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'head', 'header', 'hgroup', 'hr', 'html', 'i', 'iframe', 'img', 'input', 'ins', 'kbd', 'keygen', 'label', 'legend', 'li', 'link', 'main', 'map', 'mark', 'menu', 'menuitem', 'meta', 'meter', 'nav', 'noscript', 'object', 'ol', 'optgroup', 'option', 'output', 'p', 'param', 'pre', 'progress', 'q', 'rb', 'rp', 'rt', 'rtc', 'ruby', 's', 'samp', 'script', 'section', 'select', 'small', 'source', 'span', 'strong', 'style', 'sub', 'summary', 'sup', 'table', 'tbody', 'td', 'template', 'textarea', 'tfoot', 'th', 'thead', 'time', 'title', 'tr', 'track', 'u', 'ul', 'var', 'video', 'wbr'].forEach(function (element) {
+  jsmvc.view[element] = function () {
+    var _jsmvc;
+
     for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
       args[_key4] = arguments[_key4];
     }
 
-    return viewFactory.apply(void 0, [element].concat(args));
+    return (_jsmvc = jsmvc).view.apply(_jsmvc, [element].concat(args));
   };
 });

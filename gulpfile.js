@@ -5,6 +5,7 @@ const babel = require('gulp-babel');
 const uglify = require('gulp-uglify');
 const rename = require('gulp-rename');
 const concat = require('gulp-concat');
+const jsdoc = require('gulp-jsdoc3');
 
 function clean() {
   return del('dist');
@@ -40,3 +41,10 @@ function build2() {
 const build = gulp.parallel(build1, build2);
 
 module.exports.default = gulp.series(clean, build);
+
+function makeDoc() {
+  return gulp.src(['README.md', 'src/**/*.js'])
+    .pipe(jsdoc());
+}
+
+module.exports.makeDoc = makeDoc;

@@ -8,20 +8,19 @@ function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.
 
 function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
 
-/* global eventfulPropertyDescriptors */
-
-/* exported collectionPropertyDescriptors */
-var collectionPropertyDescriptors = {
-  definedByCollectionPropertyDescriptors: {
+/* global jsmvc */
+window.jsmvc = window.jsmvc || {};
+jsmvc.collectionPropertyDescriptors = {
+  definedBy_collectionPropertyDescriptors: {
     value: true
   },
-  __collectionData: {
+  collectionData: {
     writable: true
   },
   length: {
     get: function get() {
-      if (this.__collectionData) {
-        return this.__collectionData.length;
+      if (this.collectionData) {
+        return this.collectionData.length;
       }
 
       return 0;
@@ -41,12 +40,12 @@ var collectionPropertyDescriptors = {
               set: function set(value) {
                 var _this2 = this;
 
-                if (this.__collectionData[key] !== value) {
-                  var oldValue = this.__collectionData[key];
+                if (this.collectionData[key] !== value) {
+                  var oldValue = this.collectionData[key];
                   this.itemSetter.call(this, value, function () {
-                    _this2.__collectionData[key] = value;
+                    _this2.collectionData[key] = value;
 
-                    if (_this2.definedByEventfulPropertyDescriptors) {
+                    if (_this2.definedBy_eventfulPropertyDescriptors) {
                       _this2.trigger('change', key, value, oldValue);
 
                       _this2.trigger("change:".concat(key), value, oldValue);
@@ -58,7 +57,7 @@ var collectionPropertyDescriptors = {
                 var _this3 = this;
 
                 return this.itemGetter(function () {
-                  return _this3.__collectionData[key];
+                  return _this3.collectionData[key];
                 });
               }
             });
@@ -83,14 +82,13 @@ var collectionPropertyDescriptors = {
   },
   toArray: {
     value: function value() {
-      var array = this.__collectionData.slice();
-
+      var array = this.collectionData.slice();
       array.forEach(function (value, index) {
-        if (value.definedByModelPropertyDescriptors) {
+        if (value.definedBy_modelPropertyDescriptors) {
           array[index] = value.toJSON();
         }
 
-        if (value.definedByCollectionPropertyDescriptors) {
+        if (value.definedBy_collectionPropertyDescriptors) {
           array[index] = value.toArray();
         }
       });
@@ -99,12 +97,12 @@ var collectionPropertyDescriptors = {
   }
 };
 ['copyWithin', 'fill', 'pop', 'push', 'reverse', 'shift', 'sort', 'splice', 'unshift'].forEach(function (method) {
-  collectionPropertyDescriptors[method] = {
+  jsmvc.collectionPropertyDescriptors[method] = {
     value: function value() {
       var _Array$prototype$meth;
 
-      if (!this.__collectionData) {
-        this.__collectionData = [];
+      if (!this.collectionData) {
+        this.collectionData = [];
       }
 
       var startingLength = this.length;
@@ -113,12 +111,12 @@ var collectionPropertyDescriptors = {
         args[_key] = arguments[_key];
       }
 
-      var returnValue = (_Array$prototype$meth = Array.prototype[method]).call.apply(_Array$prototype$meth, [this.__collectionData].concat(args));
+      var returnValue = (_Array$prototype$meth = Array.prototype[method]).call.apply(_Array$prototype$meth, [this.collectionData].concat(args));
 
       this.finalizeData(startingLength);
 
-      if (this.definedByEventfulPropertyDescriptors) {
-        this.triggerHandlers('change');
+      if (this.definedBy_eventfulPropertyDescriptors) {
+        this.triggerEvents('change');
       }
 
       return returnValue;
@@ -126,25 +124,24 @@ var collectionPropertyDescriptors = {
   };
 });
 ['concat', 'includes', 'indexOf', 'join', 'lastIndexOf', 'slice', 'toSource', 'toString', 'toLocaleString', 'entries', 'every', 'filter', 'find', 'findIndex', 'forEach', 'keys', 'map', 'reduce', 'reduceRight', 'some', 'values'].forEach(function (method) {
-  collectionPropertyDescriptors[method] = {
+  jsmvc.collectionPropertyDescriptors[method] = {
     value: function value() {
       var _Array$prototype$meth2;
 
-      if (!this.__collectionData) {
-        this.__collectionData = [];
+      if (!this.collectionData) {
+        this.collectionData = [];
       }
 
       for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
         args[_key2] = arguments[_key2];
       }
 
-      return (_Array$prototype$meth2 = Array.prototype[method]).call.apply(_Array$prototype$meth2, [this.__collectionData].concat(args));
+      return (_Array$prototype$meth2 = Array.prototype[method]).call.apply(_Array$prototype$meth2, [this.collectionData].concat(args));
     }
   };
 });
-/* exported collectionFactory */
 
-function collectionFactory() {
+jsmvc.collection = function () {
   var _obj;
 
   var arr = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
@@ -155,15 +152,15 @@ function collectionFactory() {
     arr = [];
   }
 
-  if (!obj.definedByEventfulPropertyDescriptors) {
-    Object.defineProperties(obj, eventfulPropertyDescriptors);
+  if (jsmvc.eventful) {
+    obj = jsmvc.eventful(obj);
   }
 
-  if (!obj.definedByCollectionPropertyDescriptors) {
-    Object.defineProperties(obj, collectionPropertyDescriptors);
+  if (!obj.definedBy_collectionPropertyDescriptors) {
+    Object.defineProperties(obj, jsmvc.collectionPropertyDescriptors);
   }
 
   (_obj = obj).push.apply(_obj, _toConsumableArray(arr));
 
   return obj;
-}
+};

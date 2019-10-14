@@ -1,21 +1,20 @@
-/* global eventfulPropertyDescriptors */
+/* global jsmvc */
+window.jsmvc = window.jsmvc || {};
 
-/* exported collectionPropertyDescriptors */
-const collectionPropertyDescriptors = {
-  definedByCollectionPropertyDescriptors: {
+jsmvc.collectionPropertyDescriptors = {
+  definedBy_collectionPropertyDescriptors: {
     value: true
   },
 
-  __collectionData: {
+  collectionData: {
     writable: true
   },
 
   length: {
     get() {
-      if (this.__collectionData) {
-        return this.__collectionData.length;
+      if (this.collectionData) {
+        return this.collectionData.length;
       }
-
       return 0;
     }
   },
@@ -30,11 +29,11 @@ const collectionPropertyDescriptors = {
             configurable: true,
             enumerable: true,
             set(value) {
-              if (this.__collectionData[key] !== value) {
-                const oldValue = this.__collectionData[key];
+              if (this.collectionData[key] !== value) {
+                const oldValue = this.collectionData[key];
                 this.itemSetter.call(this, value, () => {
-                  this.__collectionData[key] = value;
-                  if (this.definedByEventfulPropertyDescriptors) {
+                  this.collectionData[key] = value;
+                  if (this.definedBy_eventfulPropertyDescriptors) {
                     this.trigger('change', key, value, oldValue);
                     this.trigger(`change:${key}`, value, oldValue);
                   }
@@ -42,7 +41,7 @@ const collectionPropertyDescriptors = {
               }
             },
             get() {
-              return this.itemGetter(() => this.__collectionData[key]);
+              return this.itemGetter(() => this.collectionData[key]);
             }
           });
 
@@ -69,12 +68,12 @@ const collectionPropertyDescriptors = {
 
   toArray: {
     value() {
-      const array = this.__collectionData.slice();
+      const array = this.collectionData.slice();
       array.forEach((value, index) => {
-        if (value.definedByModelPropertyDescriptors) {
+        if (value.definedBy_modelPropertyDescriptors) {
           array[index] = value.toJSON();
         }
-        if (value.definedByCollectionPropertyDescriptors) {
+        if (value.definedBy_collectionPropertyDescriptors) {
           array[index] = value.toArray();
         }
       });
@@ -85,18 +84,18 @@ const collectionPropertyDescriptors = {
 
 ['copyWithin', 'fill', 'pop', 'push', 'reverse', 'shift', 'sort', 'splice', 'unshift']
   .forEach((method) => {
-    collectionPropertyDescriptors[method] = {
+    jsmvc.collectionPropertyDescriptors[method] = {
       value(...args) {
-        if (!this.__collectionData) {
-          this.__collectionData = [];
+        if (!this.collectionData) {
+          this.collectionData = [];
         }
 
         const startingLength = this.length;
-        const returnValue = Array.prototype[method].call(this.__collectionData, ...args);
+        const returnValue = Array.prototype[method].call(this.collectionData, ...args);
         this.finalizeData(startingLength);
 
-        if (this.definedByEventfulPropertyDescriptors) {
-          this.triggerHandlers('change');
+        if (this.definedBy_eventfulPropertyDescriptors) {
+          this.triggerEvents('change');
         }
 
         return returnValue;
@@ -107,32 +106,31 @@ const collectionPropertyDescriptors = {
 ['concat', 'includes', 'indexOf', 'join', 'lastIndexOf', 'slice', 'toSource', 'toString', 'toLocaleString', 'entries',
   'every', 'filter', 'find', 'findIndex', 'forEach', 'keys', 'map', 'reduce', 'reduceRight', 'some', 'values']
   .forEach((method) => {
-    collectionPropertyDescriptors[method] = {
+    jsmvc.collectionPropertyDescriptors[method] = {
       value(...args) {
-        if (!this.__collectionData) {
-          this.__collectionData = [];
+        if (!this.collectionData) {
+          this.collectionData = [];
         }
-        return Array.prototype[method].call(this.__collectionData, ...args);
+        return Array.prototype[method].call(this.collectionData, ...args);
       }
     };
   });
 
-/* exported collectionFactory */
-function collectionFactory(arr = [], obj = {}) {
+jsmvc.collection = (arr = [], obj = {}) => {
   if (!Array.isArray(arr)) {
     obj = arr;
     arr = [];
   }
 
-  if (!obj.definedByEventfulPropertyDescriptors) {
-    Object.defineProperties(obj, eventfulPropertyDescriptors);
+  if (jsmvc.eventful) {
+    obj = jsmvc.eventful(obj);
   }
 
-  if (!obj.definedByCollectionPropertyDescriptors) {
-    Object.defineProperties(obj, collectionPropertyDescriptors);
+  if (!obj.definedBy_collectionPropertyDescriptors) {
+    Object.defineProperties(obj, jsmvc.collectionPropertyDescriptors);
   }
 
   obj.push(...arr);
 
   return obj;
-}
+};
