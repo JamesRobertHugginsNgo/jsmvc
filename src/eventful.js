@@ -1,5 +1,8 @@
 /* global jsmvc */
-window.jsmvc = window.jsmvc || {};
+
+if (!window.jsmvc) {
+  window.jsmvc = {};
+}
 
 jsmvc.eventfulPropertyDescriptors = {
   definedBy_eventfulPropertyDescriptors: {

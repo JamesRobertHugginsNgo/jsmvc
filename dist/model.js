@@ -1,7 +1,10 @@
 "use strict";
 
 /* global jsmvc */
-window.jsmvc = window.jsmvc || {};
+if (!window.jsmvc) {
+  window.jsmvc = {};
+}
+
 jsmvc.modelPropertyDescriptors = {
   definedBy_modelPropertyDescriptors: {
     value: true

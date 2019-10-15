@@ -3,7 +3,10 @@
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 /* global jsmvc */
-window.jsmvc = window.jsmvc || {};
+if (!window.jsmvc) {
+  window.jsmvc = {};
+}
+
 jsmvc.viewPropertyDescriptors = {
   definedBy_viewPropertyDescriptors: {
     value: true
