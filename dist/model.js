@@ -1,9 +1,24 @@
 "use strict";
 
-/* global jsmvc */
+/**
+ * @namespace jsmvc
+ */
 if (!window.jsmvc) {
   window.jsmvc = {};
 }
+/* global jsmvc */
+
+/**
+ * An object property descriptor used to add model properties to an object.
+ * @memberof jsmvc
+ * 
+ * @property {object} definedBy_modelPropertyDescriptors
+ * @property {object} propertyData
+ * @property {object} setProperty
+ * @property {object} unsetProperty
+ * @property {object} toJSON
+ */
+
 
 jsmvc.modelPropertyDescriptors = {
   definedBy_modelPropertyDescriptors: {
@@ -119,6 +134,18 @@ jsmvc.modelPropertyDescriptors = {
     }
   }
 };
+/**
+ * A factory function used to define jsmvc.modelPropertyDescriptors and jsmvc.modelPropertyDescriptors to an object.
+ * @memberof jsmvc
+ * 
+ * @function
+ * @argument {object} obj
+ * @returns {object}
+ * 
+ * @example
+ * const obj = {};
+ * obj = jsmvc.model(obj);
+ */
 
 jsmvc.model = function () {
   var obj = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};

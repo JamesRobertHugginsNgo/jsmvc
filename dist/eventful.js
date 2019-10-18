@@ -1,9 +1,51 @@
 "use strict";
 
-/* global jsmvc */
+/**
+ * @namespace jsmvc
+ */
 if (!window.jsmvc) {
   window.jsmvc = {};
 }
+/* global jsmvc */
+
+/**
+ * An object property descriptor used to add eventful properties to an object.
+ * @memberof jsmvc
+ * 
+ * @property {object} definedBy_eventfulPropertyDescriptors Adds a flag used to determin if the object was defined with jsmvc.eventfulPropertyDescriptors
+ * @property {object} eventfulEnabled Adds a property representing the object's enable state
+ * @property {object} enableEventful Adds a method used to set the enable state to enabled
+ * @property {object} disableEventful Adds a method used to set the enable state to disabled
+ * @property {object} eventfulData Adds a property to hold event related data
+ * @property {object} eventfulReferences Adds a property to hold event related data of another object
+ * @property {object} addEvent Adds a method for adding event handler to an event
+ * @property {object} removeEvents Adds a method for removing event handler to an event
+ * @property {object} triggerEvents Adds a method for triggering event handler of an event
+ * @property {object} addEmitterEvent Adds a method for adding event handler to an event of another object
+ * @property {object} removeEmitterEvents Adds a method for removing event handler to an event of another object
+ * @property {object} on Alias to addEvent method
+ * @property {object} off Alias to removeEvents method
+ * @property {object} trigger Alias to triggerEvents method
+ * @property {object} listenTo Alias to addEmitterEvent method
+ * @property {object} stopListening Alias to removeEmitterEvents method
+ * 
+ * @example
+ * const obj = {};
+ * Object.defineProperties(obj, jsmvc.eventfulPropertyDescriptors);
+ * 
+ * // Add an event handler
+ * obj.on('test', () => { console.log('test1'); });
+ * 
+ * // Add another event handler
+ * const handler = () => { console.log('test2'); };
+ * obj.on('test', handler);
+ * 
+ * // Remove event handler
+ * obj.off('test', handler);
+ * 
+ * obj.trigger('test')
+ */
+
 
 jsmvc.eventfulPropertyDescriptors = {
   definedBy_eventfulPropertyDescriptors: {
@@ -211,6 +253,18 @@ jsmvc.eventfulPropertyDescriptors.off = jsmvc.eventfulPropertyDescriptors.remove
 jsmvc.eventfulPropertyDescriptors.trigger = jsmvc.eventfulPropertyDescriptors.triggerEvents;
 jsmvc.eventfulPropertyDescriptors.listenTo = jsmvc.eventfulPropertyDescriptors.addEmitterEvent;
 jsmvc.eventfulPropertyDescriptors.stopListening = jsmvc.eventfulPropertyDescriptors.removeEmitterEvents;
+/**
+ * A factory function used to define jsmvc.eventfulPropertyDescriptors to an object.
+ * @memberof jsmvc
+ * 
+ * @function
+ * @argument {object} obj
+ * @returns {object}
+ * 
+ * @example
+ * const obj = {};
+ * obj = jsmvc.eventful(obj);
+ */
 
 jsmvc.eventful = function () {
   var obj = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};

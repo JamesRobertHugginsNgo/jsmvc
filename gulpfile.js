@@ -6,30 +6,39 @@ const uglify = require('gulp-uglify');
 const rename = require('gulp-rename');
 const concat = require('gulp-concat');
 const jsdoc = require('gulp-jsdoc3');
+const header = require('gulp-header');
+const footer = require('gulp-footer');
+
+const fs = require('fs');
 
 function clean() {
-  return del('dist');
+  return del(['dist', 'jsdocs', 'temp']);
 }
 
-function build1() {
-  return gulp.src('src/**/*.js')
+function buildjs_init() {
+  return gulp.src('src/**/[!_]*.js')
     .pipe(eslint())
     .pipe(eslint.format())
-    .pipe(babel({ presets: ['@babel/env'] }))
-    .pipe(gulp.dest('dist'))
-    .pipe(uglify())
-    .pipe(rename((path) => {
-      path.basename += '.min';
-    }))
-    .pipe(gulp.dest('dist'));
-}
-
-function build2() {
-  return gulp.src('src/**/*.js')
-    .pipe(eslint())
-    .pipe(eslint.format())
+    .pipe(gulp.dest('temp'))
     .pipe(concat('jsmvc.js'))
-    .pipe(babel({ presets: ['@babel/env'] }))
+    .pipe(gulp.dest('temp'));
+}
+
+function buildjs_finalize() {
+  return gulp.src('temp/**/*.js')
+    .pipe(header(fs.readFileSync('src/_header.js', 'utf8')))
+    .pipe(footer(fs.readFileSync('src/_footer.js', 'utf8')))
+    .pipe(gulp.dest('temp'));
+}
+
+function buildjs_jsdoc() {
+  return gulp.src(['README.md', 'temp/**/jsmvc.js'], { read: false })
+    .pipe(jsdoc({ opts: { destination: './jsdocs' } }));
+}
+
+function buildjs_complete() {
+  return gulp.src('temp/**/*.js')
+    .pipe(babel({ presets: ['@babel/preset-env'] }))
     .pipe(gulp.dest('dist'))
     .pipe(uglify())
     .pipe(rename((path) => {
@@ -38,13 +47,6 @@ function build2() {
     .pipe(gulp.dest('dist'));
 }
 
-const build = gulp.parallel(build1, build2);
+const buildjs = gulp.series(buildjs_init, buildjs_finalize, gulp.parallel(buildjs_jsdoc, buildjs_complete));
 
-module.exports.default = gulp.series(clean, build);
-
-function makeDoc() {
-  return gulp.src(['README.md', 'src/**/*.js'])
-    .pipe(jsdoc());
-}
-
-module.exports.makeDoc = makeDoc;
+module.exports.default = gulp.series(clean, buildjs);

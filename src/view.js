@@ -1,9 +1,21 @@
 /* global jsmvc */
 
-if (!window.jsmvc) {
-  window.jsmvc = {};
-}
-
+/**
+ * An object property descriptor used to add view properties to an object.
+ * @memberof jsmvc
+ * 
+ * @property {object} definedBy_viewPropertyDescriptors
+ * @property {object} attributeData
+ * @property {object} defineAttributes
+ * @property {object} renderAttributesPromise
+ * @property {object} renderAttributes
+ * @property {object} childElementData
+ * @property {object} defineChildElements
+ * @property {object} renderChildElementsPromise
+ * @property {object} renderChildElements
+ * @property {object} renderPromise
+ * @property {object} render
+ */
 jsmvc.viewPropertyDescriptors = {
   definedBy_viewPropertyDescriptors: {
     value: true
@@ -161,10 +173,6 @@ jsmvc.viewPropertyDescriptors = {
       const docFragment = document.createDocumentFragment();
 
       const doRenderChildElements = (childElement, placeholder) => {
-        // if (!placeholder) {
-        //   placeholder = this.appendChild(document.createTextNode(' '));
-        // }
-
         if (typeof childElement === 'function') {
           return doRenderChildElements(childElement(), placeholder);
         }
@@ -369,7 +377,26 @@ jsmvc.viewPropertyDescriptors = {
   }
 };
 
-/* exported view */
+/**
+ * A factory function used to define jsmvc.modelPropertyDescriptors and jsmvc.viewPropertyDescriptors to an object.
+ * @memberof jsmvc
+ * 
+ * @function
+ * @argument {string|HTMLElement} element
+ * @argument {object|function} [attributes]
+ * @argument {string|HTMLElement|function|Array.<string|HTMLElement|function>} [childElements]
+ * @argument {function|Array.<function>} [callbacks]
+ * @returns {HTMLElement}
+ * 
+ * @example
+ * const element = jsmvc.view('div', { 'id': 'divId', 'class': 'divClass' }, [
+ *   jsmvc.view('span', null, 'CONTENT 1'), 
+ *   ' ',
+ *   jsmvc.view('span', null, 'CONTENT 2')
+ * ], () => { console.log('COMPLETE'); });
+ * 
+ * document.body.appendChild(element);
+ */
 jsmvc.view = (element, attributes, childElements, callbacks) => {
   if (typeof element === 'string') {
     element = document.createElement(element);
@@ -377,26 +404,6 @@ jsmvc.view = (element, attributes, childElements, callbacks) => {
 
   if (jsmvc.eventful) {
     element = jsmvc.eventful(element);
-  }
-
-  if (element.hasAttributes()) {
-    for (let index = 0, length = element.attributes.length; index < length; index++) {
-      const { name, value } = element.attributes[index];
-
-      if (typeof attributes === 'object' && attributes !== null) {
-        attributes = Object.assign({}, attributes);
-      } else {
-        if (attributes == null) {
-          attributes = {};
-        } else {
-          attributes = {
-            'original attributes': attributes
-          };
-        }
-      }
-
-      attributes[name] = value;
-    }
   }
 
   if (element.firstChild) {

@@ -269,7 +269,4 @@ function todoCompleteList(collection) {
 }
 
 const todoElement = document.getElementById('todo');
-
-const config = {};
-
-todoElement.appendChild(todo(config));
+todoElement.appendChild(todo());

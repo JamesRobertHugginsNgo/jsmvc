@@ -4,9 +4,7 @@
   "description": "JavaScript Model View Controller",
   "main": "index.js",
   "scripts": {
-    "NPM_Install": "npm install",
-    "Build": "gulp",
-    "Make_Doc": "gulp makeDoc"
+    "Gulp": "gulp"
   },
   "keywords": [
     "JavaScript",
@@ -28,6 +26,8 @@
     "gulp-babel": "^8.0.0",
     "gulp-concat": "^2.6.1",
     "gulp-eslint": "^6.0.0",
+    "gulp-footer": "^2.0.2",
+    "gulp-header": "^2.0.9",
     "gulp-jsdoc3": "^2.0.0",
     "gulp-rename": "^1.4.0",
     "gulp-uglify": "^3.0.2"

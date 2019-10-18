@@ -2,10 +2,31 @@
 
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
-/* global jsmvc */
+/**
+ * @namespace jsmvc
+ */
 if (!window.jsmvc) {
   window.jsmvc = {};
 }
+/* global jsmvc */
+
+/**
+ * An object property descriptor used to add view properties to an object.
+ * @memberof jsmvc
+ * 
+ * @property {object} definedBy_viewPropertyDescriptors
+ * @property {object} attributeData
+ * @property {object} defineAttributes
+ * @property {object} renderAttributesPromise
+ * @property {object} renderAttributes
+ * @property {object} childElementData
+ * @property {object} defineChildElements
+ * @property {object} renderChildElementsPromise
+ * @property {object} renderChildElements
+ * @property {object} renderPromise
+ * @property {object} render
+ */
+
 
 jsmvc.viewPropertyDescriptors = {
   definedBy_viewPropertyDescriptors: {
@@ -171,9 +192,6 @@ jsmvc.viewPropertyDescriptors = {
       var docFragment = document.createDocumentFragment();
 
       var doRenderChildElements = function doRenderChildElements(childElement, placeholder) {
-        // if (!placeholder) {
-        //   placeholder = this.appendChild(document.createTextNode(' '));
-        // }
         if (typeof childElement === 'function') {
           return doRenderChildElements(childElement(), placeholder);
         }
@@ -396,7 +414,26 @@ jsmvc.viewPropertyDescriptors = {
     }
   }
 };
-/* exported view */
+/**
+ * A factory function used to define jsmvc.modelPropertyDescriptors and jsmvc.viewPropertyDescriptors to an object.
+ * @memberof jsmvc
+ * 
+ * @function
+ * @argument {string|HTMLElement} element
+ * @argument {object|function} [attributes]
+ * @argument {string|HTMLElement|function|Array.<string|HTMLElement|function>} [childElements]
+ * @argument {function|Array.<function>} [callbacks]
+ * @returns {HTMLElement}
+ * 
+ * @example
+ * const element = jsmvc.view('div', { 'id': 'divId', 'class': 'divClass' }, [
+ *   jsmvc.view('span', null, 'CONTENT 1'), 
+ *   ' ',
+ *   jsmvc.view('span', null, 'CONTENT 2')
+ * ], () => { console.log('COMPLETE'); });
+ * 
+ * document.body.appendChild(element);
+ */
 
 jsmvc.view = function (element, attributes, childElements, callbacks) {
   if (typeof element === 'string') {
@@ -407,33 +444,11 @@ jsmvc.view = function (element, attributes, childElements, callbacks) {
     element = jsmvc.eventful(element);
   }
 
-  if (element.hasAttributes()) {
-    for (var index = 0, length = element.attributes.length; index < length; index++) {
-      var _element$attributes$i = element.attributes[index],
-          name = _element$attributes$i.name,
-          value = _element$attributes$i.value;
-
-      if (_typeof(attributes) === 'object' && attributes !== null) {
-        attributes = Object.assign({}, attributes);
-      } else {
-        if (attributes == null) {
-          attributes = {};
-        } else {
-          attributes = {
-            'original attributes': attributes
-          };
-        }
-      }
-
-      attributes[name] = value;
-    }
-  }
-
   if (element.firstChild) {
     var tempChildElements = [];
 
-    for (var _index = 0, _length = element.childNodes.length; _index < _length; _index++) {
-      tempChildElements.push(element.childNodes[_index]);
+    for (var index = 0, length = element.childNodes.length; index < length; index++) {
+      tempChildElements.push(element.childNodes[index]);
     }
 
     if (tempChildElements.length > 0) {

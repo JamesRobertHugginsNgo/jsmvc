@@ -1,9 +1,9 @@
 /* global jsmvc */
 
-if (!window.jsmvc) {
-  window.jsmvc = {};
-}
-
+/**
+ * An object property descriptor used to add collection properties to an object.
+ * @memberof jsmvc
+ */
 jsmvc.collectionPropertyDescriptors = {
   definedBy_collectionPropertyDescriptors: {
     value: true
@@ -119,6 +119,18 @@ jsmvc.collectionPropertyDescriptors = {
     };
   });
 
+/**
+ * A factory function used to define jsmvc.modelPropertyDescriptors and jsmvc.collectionPropertyDescriptors to an object.
+ * @memberof jsmvc
+ * 
+ * @function
+ * @argument {object} obj
+ * @returns {object}
+ * 
+ * @example
+ * const obj = {};
+ * obj = jsmvc.collection(obj);
+ */
 jsmvc.collection = (arr = [], obj = {}) => {
   if (!Array.isArray(arr)) {
     obj = arr;
