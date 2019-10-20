@@ -374,6 +374,29 @@ jsmvc.viewPropertyDescriptors = {
 
       return this;
     }
+  },
+
+  cleanUpHandler: {
+    writable: true
+  },
+
+  cleanUp: {
+    value() {
+      for (let index = 0, length = this.childNodes.length; index < length; index++) {
+        const childNode = this.childNodes[index];
+        if (childNode.definedBy_viewPropertyDescriptors) {
+          childNode.cleanUp();
+        }
+      }
+
+      if (this.cleanUpHandler) {
+        this.cleanUpHandler.call(this);
+      }
+
+      if (this.definedBy_eventfulPropertyDescriptors) {
+        this.triggerEvents('cleanUp');
+      }
+    }
   }
 };
 
