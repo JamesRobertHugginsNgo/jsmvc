@@ -1027,13 +1027,7 @@ jsmvc.viewPropertyDescriptors = {
   },
   cleanUp: {
     value: function value() {
-      for (var index = 0, length = this.childNodes.length; index < length; index++) {
-        var childNode = this.childNodes[index];
-
-        if (childNode.definedBy_viewPropertyDescriptors) {
-          childNode.cleanUp();
-        }
-      }
+      this.cleanUpChildNodes();
 
       if (this.cleanUpHandler) {
         this.cleanUpHandler.call(this);
@@ -1041,6 +1035,17 @@ jsmvc.viewPropertyDescriptors = {
 
       if (this.definedBy_eventfulPropertyDescriptors) {
         this.triggerEvents('cleanUp');
+      }
+    }
+  },
+  cleanUpChildNodes: {
+    value: function value() {
+      for (var index = 0, length = this.childNodes.length; index < length; index++) {
+        var childNode = this.childNodes[index];
+
+        if (childNode.definedBy_viewPropertyDescriptors) {
+          childNode.cleanUp();
+        }
       }
     }
   }
